@@ -59,7 +59,7 @@ export default function Header() {
                     </div>
                 </div>
 
-                <div className="h-[50px] md:h-[70px] bg-white flex items-center px-4">
+                <div className="h-[50px] md:h-[70px] bg-white flex items-center px-4 justify-between">
                     <nav className="hidden md:flex gap-6 font-bold text-[#5B0019] text-sm uppercase">
                         <a href="#" className="hover:text-red-700">Về chúng tôi</a>
                         <a href="#" className="hover:text-red-700">Tuyển sinh</a>
@@ -67,29 +67,39 @@ export default function Header() {
                         <a href="#" className="hover:text-red-700">Văn hóa</a>
                         <a href="#" className="hover:text-red-700">Nghệ thuật</a>
                         <a href="#" className="hover:text-red-700">Liên hệ</a>
-
-
                     </nav>
+                    <div className="flex items-center ml-auto md:ml-0">
+                        <a
+                            href="/login"
+                            className="px-4 py-1.5 md:px-6 md:py-2 border-2 border-[#5B0019] bg-white text-[#5B0019] text-[12px] md:text-sm font-bold uppercase rounded hover:bg-[#5B0019] hover:text-white transition-all"
+                        >
+                            Đăng nhập
+                        </a>
+                    </div>
                 </div>
             </div>
-            {isMenuOpen && (
-                <div className="absolute top-[90px] left-0 w-full bg-[#5B0019] text-white flex flex-col p-4 gap-4 md:hidden animate-in slide-in-from-top">
-                    <div className="flex items-center gap-3 border-b border-white/20 pb-2">
-                        <Megaphone size={20} /> <span>Tin tức</span>
+            {
+                isMenuOpen && (
+                    <div className="absolute top-[90px] left-0 w-full bg-[#5B0019] text-white flex flex-col p-4 gap-4 md:hidden animate-in slide-in-from-top">
+                        <div className="flex items-center gap-3 border-b border-white/20 pb-2">
+                            <Megaphone size={20} /> <span>Tin tức</span>
+                        </div>
+                        <div className="flex items-center gap-3 border-b border-white/20 pb-2">
+                            <CalendarCheck size={20} /> <span>Lịch</span>
+                        </div>
+                        <div className="flex items-center gap-3 border-b border-white/20 pb-2">
+                            <Moon size={20} /> <span>Chế độ tối</span>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2">
+                            <a href="#" className="uppercase font-bold">Về chúng tôi</a>
+                            <a href="#" className="uppercase font-bold">Tuyển sinh</a>
+                            <a href="#" className="uppercase font-bold">Đào tạo</a>
+                            <a href="#" className="uppercase font-bold">Văn hóa</a>
+                            <a href="#" className="uppercase font-bold">Nghệ thuật</a>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3 border-b border-white/20 pb-2">
-                        <CalendarCheck size={20} /> <span>Lịch</span>
-                    </div>
-                    <div className="flex items-center gap-3 border-b border-white/20 pb-2">
-                        <Moon size={20} /> <span>Chế độ tối</span>
-                    </div>
-                    <div className="flex flex-col gap-2 pt-2">
-                        <a href="#" className="uppercase font-bold">Về chúng tôi</a>
-                        <a href="#" className="uppercase font-bold">Tuyển sinh</a>
-                        <a href="#" className="uppercase font-bold">Học thuật</a>
-                    </div>
-                </div>
-            )}
-        </header>
+                )
+            }
+        </header >
     );
 }
