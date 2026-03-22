@@ -9,14 +9,14 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
-import pic1 from "../../../public/pic1.png";
-import pic2 from "../../../public/pic2.png";
-import pic3 from "../../../public/pic3.png";
-import experience from "../../../public/experience.png";
-import art from "../../../public/art.png";
-import sport from "../../../public/sport.png";
+import pic1 from "../../public/pic1.png";
+import pic2 from "../../public/pic2.png";
+import pic3 from "../../public/pic3.png";
+import experience from "../../public/experience.png";
+import study from "../../public/study.png";
+import sport from "../../public/sport.png";
+import art from "../../public/art.png";
 import Image from "next/image";
-import study from "../../../public/study.png";
 
 export default function Content() {
     const [activeSection, setActiveSection] = useState("hero");

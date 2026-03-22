@@ -4,12 +4,19 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
+import Cookies from "js-cookie";
+
+interface LoginResponse {
+    access_token?: string;
+    token?: string;
+    message?: string;
+}
 
 export default function LoginPage() {
     const router = useRouter();
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string>("");
 
     const [formData, setFormData] = useState({
         email: "",
@@ -37,13 +44,25 @@ export default function LoginPage() {
                 },
                 body: JSON.stringify(formData),
             });
-            console.log("Đang gọi API tại:", `${apiUrl}/login`);
-            const data = await response.json();
+
+            const data: LoginResponse = await response.json();
 
             if (response.ok) {
-                const token = typeof data === 'string' ? data : data.access_token;
-                localStorage.setItem("auth_token", token);
-                router.push("/dashboard");
+                const token = data.access_token || data.token || (typeof data === 'string' ? data : "");
+
+                if (token) {
+                    Cookies.set("auth_token", token, {
+                        expires: 7,
+                        path: '/',
+                        sameSite: 'strict',
+                        secure: process.env.NODE_ENV === 'production'
+                    });
+
+                    router.push("/dashboard");
+                    router.refresh();
+                } else {
+                    setError("Phản hồi từ máy chủ không hợp lệ.");
+                }
             } else {
                 if (response.status === 401) {
                     setError("Email hoặc mật khẩu không chính xác.");
@@ -61,7 +80,7 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#5B0019] flex items-center justify-center p-4 font-sans">
+        <main className="min-h-screen bg-[#5B0019] flex items-center justify-center p-4 font-sans text-white">
             <div className="w-full max-w-[400px] bg-[#420012] p-8 rounded-3xl shadow-2xl border border-white/5">
 
                 <div className="flex justify-center mb-6">
