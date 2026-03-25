@@ -12,6 +12,7 @@ export const MENU_CONFIG = {
         { label: "Lịch học", icon: <Calendar size={22} />, desc: "Lịch trình học tập", path: "/dashboard/lich-hoc" },
         { label: "Kết quả", icon: <Trophy size={22} />, desc: "Kết quả học tập", path: "/dashboard/ket-qua" },
         { label: "AI hỗ trợ", icon: <MessageSquare size={22} />, desc: "Hỗ trợ học tập bằng AI", path: "/dashboard/chat-ai-ho-tro" },
+        { label: "Giám sát Camera", icon: <Lightbulb size={22} />, desc: "Test tính năng giám sát", path: "/dashboard/test-camera" },
     ],
     admin: [
         { label: "Trang chủ", icon: <Home size={22} />, path: "/dashboard" },
