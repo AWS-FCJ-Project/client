@@ -118,6 +118,7 @@ export default function LoginPage() {
                                 onChange={handleInputChange}
                                 placeholder="yourname@gmail.com"
                                 className="w-full bg-[#111827] border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-[#5B0019] focus:ring-1 focus:ring-[#5B0019] transition-all"
+                                suppressHydrationWarning
                             />
                         </div>
                     </div>
@@ -137,11 +138,13 @@ export default function LoginPage() {
                                 onChange={handleInputChange}
                                 placeholder="••••••••"
                                 className="w-full bg-[#111827] border border-gray-700 rounded-xl py-3 pl-10 pr-10 text-white text-sm focus:outline-none focus:border-[#5B0019] focus:ring-1 focus:ring-[#5B0019] transition-all"
+                                suppressHydrationWarning
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                suppressHydrationWarning
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -152,6 +155,7 @@ export default function LoginPage() {
                         type="submit"
                         disabled={loading}
                         className="w-full bg-white border-2 border-[#5B0019] text-[#5B0019] font-bold py-3 rounded-xl transition-all duration-300 shadow-lg mt-4 hover:bg-[#5B0019] hover:border-[#5B0019] hover:text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        suppressHydrationWarning
                     >
                         {loading ? (
                             <>
