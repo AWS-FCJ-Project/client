@@ -3,10 +3,29 @@ import { Sidebar } from '@/components/ui/sidebar';
 import { Bell } from 'lucide-react';
 import Image from 'next/image';
 import study from '../../../public/study.png';
+import { LogOut } from 'lucide-react';
+import Cookies from 'js-cookie';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const role = 'student'; // Sau này lấy từ auth context
+    const role = 'student';
+    const handleLogout = async () => {
+        try {
+            const token = Cookies.get('auth_token');
 
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        } catch (error) {
+            console.error("Lỗi gọi API logout:", error);
+        } finally {
+            Cookies.remove('auth_token', { path: '/' });
+            window.location.href = '/';
+        }
+    };
     return (
         <div className="flex h-screen w-full bg-[#F0F2F5] overflow-hidden">
             <Sidebar role={role} />
@@ -23,6 +42,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <div className="w-10 h-10 rounded-full relative overflow-hidden">
                                 <Image src={study} alt="Avatar" fill className="object-cover" />
                             </div>
+                            <button
+                                onClick={handleLogout}
+                                className="ml-4 flex items-center gap-2 px-5 py-2.5 bg-[#5B0019] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-all shadow-md active:scale-95"
+                            >
+                                <LogOut size={18} />
+                                Đăng xuất
+                            </button>
                         </div>
                     </div>
                 </header>
