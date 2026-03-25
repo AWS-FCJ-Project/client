@@ -124,8 +124,8 @@ const TabButton = ({ label, active, onClick }: any) => (
     <button
         onClick={onClick}
         className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${active
-                ? 'bg-[#5B0019] text-white shadow-md'
-                : 'text-gray-500 hover:bg-gray-50'
+            ? 'bg-[#5B0019] text-white shadow-md'
+            : 'text-gray-500 hover:bg-gray-50'
             }`}
     >
         {label}
