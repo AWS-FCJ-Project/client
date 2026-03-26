@@ -13,7 +13,7 @@ const TARGET_CLASSES: Record<number, string> = {
 
 const FORBIDDEN_IDS = new Set([67, 73]);
 
-export default function CameraMonitor() {
+export default function CameraMonitor({ onViolation }: { onViolation?: (violations: string[]) => void }) {
     const [status, setStatus] = useState("Initializing...");
     const [isWarning, setIsWarning] = useState(false);
     const [violations, setViolations] = useState<string[]>([]);
@@ -228,8 +228,9 @@ export default function CameraMonitor() {
         const vStr = alertCodes.join(",");
         const isChanged = vStr !== prevViolationStrRef.current;
 
-        if (currentViolations.length > 0 && (isChanged || now - lastReportTimeRef.current > 4000)) {
+        if (currentViolations.length > 0 && (isChanged || now - lastReportTimeRef.current > 5000)) {
             reportViolation(currentViolations, alertCodes, personCount, now, detections);
+            if (onViolation) onViolation(currentViolations);
             prevViolationStrRef.current = vStr;
             lastReportTimeRef.current = now;
         } else if (currentViolations.length === 0 && isChanged) {

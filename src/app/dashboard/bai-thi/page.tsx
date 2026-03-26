@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     ChevronLeft, ChevronRight, Send,
-    LayoutGrid, Trophy, Clock, Camera
+    LayoutGrid, Trophy, Clock, Camera, X, AlertTriangle
 } from 'lucide-react';
 import CameraMonitor from '@/components/camera/CameraMonitor';
 
@@ -18,6 +18,9 @@ const ExamPage = () => {
     const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswers>({});
     const [timeLeft, setTimeLeft] = useState<number>(EXAM_DURATION);
     const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+    const [violationCount, setViolationCount] = useState(0);
+    const [showCheatModal, setShowCheatModal] = useState(false);
+    const [exitCountdown, setExitCountdown] = useState(3);
     const mainContentRef = useRef<HTMLDivElement>(null);
 
     const [sidebarWidth, setSidebarWidth] = useState(320);
@@ -64,6 +67,23 @@ const ExamPage = () => {
             setIsSubmitted(true);
         }
     }, [timeLeft, isSubmitted]);
+
+    useEffect(() => {
+        if (showCheatModal && exitCountdown > 0) {
+            const timer = setInterval(() => setExitCountdown(prev => prev - 1), 1000);
+            return () => clearInterval(timer);
+        } else if (showCheatModal && exitCountdown === 0) {
+            window.location.href = '/dashboard/exams';
+        }
+    }, [showCheatModal, exitCountdown]);
+
+    const handleViolation = useCallback((vList: string[]) => {
+        setViolationCount(prev => {
+            const n = prev + 1;
+            if (n >= 4) setShowCheatModal(true);
+            return n;
+        });
+    }, []);
 
     const formatTime = (seconds: number): string => {
         const m = Math.floor(seconds / 60);
@@ -117,6 +137,20 @@ const ExamPage = () => {
             </header>
 
             <div className="flex flex-1 overflow-hidden relative">
+                {/* Violation Counter Badge */}
+                <div className="absolute top-4 left-4 z-30 pointer-events-none">
+                    <div className="bg-white/90 backdrop-blur-md border border-gray-200 shadow-xl rounded-2xl p-3 flex flex-col items-center gap-1 min-w-[80px]">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Vi phạm</span>
+                        <div className={`text-2xl font-black transition-colors duration-300 ${
+                            violationCount <= 1 ? 'text-green-500' : 
+                            violationCount === 2 ? 'text-yellow-500' : 
+                            'text-red-500'
+                        }`}>
+                            {Math.min(violationCount, 3)}/3
+                        </div>
+                    </div>
+                </div>
+
                 <main ref={mainContentRef} className="flex-1 overflow-y-auto bg-gray-100">
                     <div className="max-w-3xl mx-auto p-6 space-y-4 pb-24">
                         {currentQuestions.map((qIdx) => (
@@ -174,12 +208,49 @@ const ExamPage = () => {
                     </div>
 
                     <div className="p-4 border-t border-gray-100 bg-gray-50">
-                        <CameraMonitor />
+                        <CameraMonitor onViolation={handleViolation} />
                         <p className="mt-2 text-[10px] text-center text-gray-400 italic font-medium">Vui lòng không rời khỏi khung hình</p>
                     </div>
 
                 </aside>
             </div>
+
+            {/* Cheat Detection Modal */}
+            {showCheatModal && (
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-red-100 relative">
+                        <button 
+                            onClick={() => window.location.href = '/dashboard/exams'}
+                            className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
+                        >
+                            <X size={20} />
+                        </button>
+                        
+                        <div className="p-8 text-center space-y-6">
+                            <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                                <AlertTriangle size={40} />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-black text-gray-800">Cảnh báo nghiêm trọng</h2>
+                                <p className="text-gray-600 font-medium leading-relaxed">
+                                    Phát hiện hành vi gian lận / hủy bài thi
+                                </p>
+                            </div>
+
+                            <div className="bg-red-50 text-red-700 py-3 px-6 rounded-2xl font-bold inline-block border border-red-100">
+                                Tự động thoát sau {exitCountdown}s
+                            </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-4 border-t border-gray-100">
+                            <p className="text-[10px] text-gray-400 text-center uppercase tracking-widest font-bold">
+                                Hệ thống giám sát AI proctoring
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
