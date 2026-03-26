@@ -25,6 +25,17 @@ const ExamPage = () => {
     const [exitCountdown, setExitCountdown] = useState(3);
     const [isGracePeriod, setIsGracePeriod] = useState(false);
     const mainContentRef = useRef<HTMLDivElement>(null);
+    const cameraSourceRef = useRef<HTMLDivElement>(null);
+    const sidebarTargetRef = useRef<HTMLDivElement>(null);
+    const centerTargetRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const source = cameraSourceRef.current;
+        const target = isStarted ? sidebarTargetRef.current : centerTargetRef.current;
+        if (source && target) {
+            target.appendChild(source);
+        }
+    }, [isStarted]);
 
     const [sidebarWidth, setSidebarWidth] = useState(320);
     const isResizing = useRef(false);
@@ -220,9 +231,15 @@ const ExamPage = () => {
                     </div>
 
                     <div className="p-4 border-t border-gray-100 bg-gray-50">
+                        {/* NEW SEAMLESS CAMERA TARGET */}
+                        <div ref={sidebarTargetRef} className="w-full aspect-video rounded-xl overflow-hidden" />
+
+                        {/* OLD_CAMERA_LOGIC_START
                         {isStarted && (
                             <CameraMonitor onViolation={handleViolation} onStatusChange={setCameraStatus} />
                         )}
+                        OLD_CAMERA_LOGIC_END */}
+                        
                         {!isStarted && (
                             <div className="aspect-video bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200">
                                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Đang chờ bắt đầu...</span>
@@ -283,11 +300,21 @@ const ExamPage = () => {
                         </div>
 
                         <div className="relative flex items-center justify-center">
+                            {/* NEW SEAMLESS CAMERA TARGET */}
+                            <div 
+                                ref={centerTargetRef} 
+                                className={`rounded-3xl overflow-hidden border-4 transition-all duration-700 shadow-2xl relative ${
+                                    cameraStatus === "Ready" ? "border-[#5B0019]" : "border-gray-100"
+                                }`} 
+                            />
+
+                            {/* OLD_CAMERA_LOGIC_START
                             <div className={`rounded-3xl overflow-hidden border-4 transition-all duration-700 shadow-2xl relative ${
                                 cameraStatus === "Ready" ? "border-[#5B0019]" : "border-gray-100"
                             }`}>
                                 <CameraMonitor onStatusChange={setCameraStatus} isCheck={true} />
                             </div>
+                            OLD_CAMERA_LOGIC_END */}
                         </div>
                     </div>
                 </div>
@@ -329,6 +356,16 @@ const ExamPage = () => {
                     </div>
                 </div>
             )}
+            {/* Persistent Seamless Camera Source (Hidden initially, then moved by JS) */}
+            <div className="hidden" aria-hidden="true">
+                <div ref={cameraSourceRef} className="w-full h-full">
+                    <CameraMonitor 
+                        onViolation={handleViolation} 
+                        onStatusChange={setCameraStatus} 
+                        isCheck={!isStarted} 
+                    />
+                </div>
+            </div>
         </div>
     );
 };
