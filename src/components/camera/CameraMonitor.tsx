@@ -29,9 +29,11 @@ export default function CameraMonitor({
 
     const onViolationRef = useRef(onViolation);
     const onStatusChangeRef = useRef(onStatusChange);
+    const isCheckRef = useRef(isCheck);
 
     useEffect(() => { onViolationRef.current = onViolation; }, [onViolation]);
     useEffect(() => { onStatusChangeRef.current = onStatusChange; }, [onStatusChange]);
+    useEffect(() => { isCheckRef.current = isCheck; }, [isCheck]);
 
     useEffect(() => {
         if (onStatusChangeRef.current) onStatusChangeRef.current(status);
@@ -241,18 +243,18 @@ export default function CameraMonitor({
         }
 
         setViolations(currentViolations);
-        setIsWarning(!isCheck && currentViolations.length > 0);
+        setIsWarning(!isCheckRef.current && currentViolations.length > 0);
 
         const vStr = alertCodes.join(",");
         const isChanged = vStr !== prevViolationStrRef.current;
 
         if (currentViolations.length > 0 && (isChanged || now - lastReportTimeRef.current > 5000)) {
-            if (!isCheck) reportViolation(currentViolations, alertCodes, personCount, now, detections);
+            if (!isCheckRef.current) reportViolation(currentViolations, alertCodes, personCount, now, detections);
             if (onViolationRef.current) onViolationRef.current(currentViolations);
             prevViolationStrRef.current = vStr;
             lastReportTimeRef.current = now;
         } else if (currentViolations.length === 0 && isChanged) {
-            if (!isCheck) sendClearLog(now);
+            if (!isCheckRef.current) sendClearLog(now);
             prevViolationStrRef.current = "";
         }
     };

@@ -231,8 +231,8 @@ const ExamPage = () => {
                     </div>
 
                     <div className="p-4 border-t border-gray-100 bg-gray-50">
-                        {/* NEW SEAMLESS CAMERA TARGET */}
-                        <div ref={sidebarTargetRef} className="w-full aspect-video rounded-xl overflow-hidden" />
+                        {/* NEW SEAMLESS CAMERA TARGET (Placeholder only) */}
+                        <div ref={sidebarTargetRef} className="w-full" />
 
                         {/* OLD_CAMERA_LOGIC_START
                         {isStarted && (
