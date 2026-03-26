@@ -58,7 +58,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-[#5B0019] to-[#8a0026] p-6 rounded-2xl shadow-lg text-white flex flex-col justify-between group relative overflow-hidden">
+                <div className="bg-linear-to-br from-[#5B0019] to-[#8a0026] p-6 rounded-2xl shadow-lg text-white flex flex-col justify-between group relative overflow-hidden">
                     <div className="relative z-10">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
