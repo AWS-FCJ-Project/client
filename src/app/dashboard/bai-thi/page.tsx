@@ -23,6 +23,7 @@ const ExamPage = () => {
     const [violationCount, setViolationCount] = useState(0);
     const [showCheatModal, setShowCheatModal] = useState(false);
     const [exitCountdown, setExitCountdown] = useState(3);
+    const [isGracePeriod, setIsGracePeriod] = useState(false);
     const mainContentRef = useRef<HTMLDivElement>(null);
 
     const [sidebarWidth, setSidebarWidth] = useState(320);
@@ -79,14 +80,22 @@ const ExamPage = () => {
         }
     }, [showCheatModal, exitCountdown]);
 
+    const handleStartExam = useCallback(() => {
+        setIsStarted(true);
+        setIsGracePeriod(true);
+        setTimeout(() => {
+            setIsGracePeriod(false);
+        }, 2500); // 2.5s grace period
+    }, []);
+
     const handleViolation = useCallback((vList: string[]) => {
-        if (!isStarted) return;
+        if (!isStarted || isGracePeriod) return;
         setViolationCount(prev => {
             const n = prev + 1;
             if (n >= 4) setShowCheatModal(true);
             return n;
         });
-    }, [isStarted]);
+    }, [isStarted, isGracePeriod]);
 
     const formatTime = (seconds: number): string => {
         const m = Math.floor(seconds / 60);
@@ -257,7 +266,7 @@ const ExamPage = () => {
                             </div>
 
                             <button
-                                onClick={() => setIsStarted(true)}
+                                onClick={handleStartExam}
                                 disabled={cameraStatus !== "Ready"}
                                 className={`w-full py-5 rounded-3xl font-black text-lg shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 ${
                                     cameraStatus === "Ready" 
