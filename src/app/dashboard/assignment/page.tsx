@@ -118,7 +118,7 @@ const TeacherAssignments = () => {
                                     </div>
                                 </td>
                                 <td className="p-5">
-                                    <div className="w-full max-w-[150px]">
+                                    <div className="w-full max-w-37.5]">
                                         <div className="flex justify-between items-center mb-1.5">
                                             <span className="text-xs font-bold text-gray-700">{item.submitted}/{item.total} học sinh</span>
                                             <span className="text-[10px] font-bold text-[#5B0019]">{Math.round((item.submitted / item.total) * 100)}%</span>

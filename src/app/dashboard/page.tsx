@@ -4,7 +4,6 @@ import { Trophy, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { MENU_CONFIG } from '@/lib/menu-constants';
 
-// Component con để hiển thị từng thẻ chức năng
 const DashboardCard = ({ label, icon, desc, path }: any) => (
     <Link href={path} className="group">
         <div className="bg-white rounded-2xl p-6 flex items-center gap-5 border border-transparent shadow-sm hover:shadow-xl hover:border-[#5B0019]/10 transition-all duration-300 h-full transform hover:-translate-y-1">
@@ -25,6 +24,7 @@ const DashboardCard = ({ label, icon, desc, path }: any) => (
 
 export default function DashboardPage() {
     // Giả định role hiện tại là student (sau này lấy từ context/auth)
+    // const role = 'admin';
     const role = 'student';
     const cards = MENU_CONFIG[role] || [];
 
@@ -58,7 +58,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-[#5B0019] to-[#8a0026] p-6 rounded-2xl shadow-lg text-white flex flex-col justify-between group relative overflow-hidden">
+                <div className="bg-linear-to-br from-[#5B0019] to-[#8a0026] p-6 rounded-2xl shadow-lg text-white flex flex-col justify-between group relative overflow-hidden">
                     <div className="relative z-10">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">

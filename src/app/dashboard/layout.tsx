@@ -7,7 +7,9 @@ import { LogOut } from 'lucide-react';
 import Cookies from 'js-cookie';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    // const role = 'admin'; 
     const role = 'student';
+    // Giả định role hiện tại là admin (sau này lấy từ context/auth)
     const handleLogout = async () => {
         try {
             const token = Cookies.get('auth_token');
@@ -33,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <main className="flex-1 flex flex-col min-w-0">
                 <header className="h-16 bg-white flex items-center justify-between px-8 shadow-sm z-10 shrink-0">
                     <h2 className="text-gray-700 font-bold text-lg">
-                        {role === 'student' ? 'Chào Thanh Loan! 👋' : 'Hệ thống Quản trị'}
+                        {role === "student" ? 'Chào Thanh Loan! 👋' : 'Hệ thống Quản trị'}
                     </h2>
                     <div className="flex items-center gap-6">
                         <button className="relative p-1"><Bell size={20} /></button>
