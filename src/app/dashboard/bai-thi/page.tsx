@@ -211,7 +211,14 @@ const ExamPage = () => {
                     </div>
 
                     <div className="p-4 border-t border-gray-100 bg-gray-50">
-                        <CameraMonitor onViolation={handleViolation} onStatusChange={setCameraStatus} />
+                        {isStarted && (
+                            <CameraMonitor onViolation={handleViolation} onStatusChange={setCameraStatus} />
+                        )}
+                        {!isStarted && (
+                            <div className="aspect-video bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200">
+                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Đang chờ bắt đầu...</span>
+                            </div>
+                        )}
                         <p className="mt-2 text-[10px] text-center text-gray-400 italic font-medium">Vui lòng không rời khỏi khung hình</p>
                     </div>
 
@@ -234,14 +241,6 @@ const ExamPage = () => {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
-                                    <div className={`w-3 h-3 rounded-full animate-pulse ${cameraStatus === "Ready" ? "bg-green-500" : "bg-orange-500"}`} />
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-700">Trạng thái AI: {cameraStatus}</p>
-                                        <p className="text-xs text-gray-400">YOLOv26n ONNX Runtime Engine</p>
-                                    </div>
-                                </div>
-                                
                                 <ul className="space-y-3">
                                     {[
                                         "Ngồi ngay ngắn trước camera",
@@ -274,14 +273,11 @@ const ExamPage = () => {
                             </button>
                         </div>
 
-                        <div className="relative">
-                            <div className={`rounded-[2.5rem] overflow-hidden border-8 transition-all duration-700 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] ${
-                                cameraStatus === "Ready" ? "border-[#5B0019]" : "border-gray-200"
+                        <div className="relative flex items-center justify-center">
+                            <div className={`rounded-3xl overflow-hidden border-4 transition-all duration-700 shadow-2xl relative ${
+                                cameraStatus === "Ready" ? "border-[#5B0019]" : "border-gray-100"
                             }`}>
-                                <CameraMonitor onStatusChange={setCameraStatus} />
-                            </div>
-                            <div className="absolute -bottom-6 -right-6 bg-white p-4 rounded-3xl shadow-xl border border-gray-100 animate-bounce">
-                                <Camera className="text-[#5B0019]" size={32} />
+                                <CameraMonitor onStatusChange={setCameraStatus} isCheck={true} />
                             </div>
                         </div>
                     </div>

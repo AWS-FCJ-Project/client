@@ -15,19 +15,27 @@ const FORBIDDEN_IDS = new Set([67, 73]);
 
 export default function CameraMonitor({ 
     onViolation, 
-    onStatusChange 
+    onStatusChange,
+    isCheck = false
 }: { 
     onViolation?: (violations: string[]) => void,
-    onStatusChange?: (status: string) => void
+    onStatusChange?: (status: string) => void,
+    isCheck?: boolean
 }) {
     const [status, setStatus] = useState("Initializing...");
     const [isWarning, setIsWarning] = useState(false);
     const [violations, setViolations] = useState<string[]>([]);
     const [metrics, setMetrics] = useState({ time: 0, rawCount: 0 });
 
+    const onViolationRef = useRef(onViolation);
+    const onStatusChangeRef = useRef(onStatusChange);
+
+    useEffect(() => { onViolationRef.current = onViolation; }, [onViolation]);
+    useEffect(() => { onStatusChangeRef.current = onStatusChange; }, [onStatusChange]);
+
     useEffect(() => {
-        if (onStatusChange) onStatusChange(status);
-    }, [status, onStatusChange]);
+        if (onStatusChangeRef.current) onStatusChangeRef.current(status);
+    }, [status]);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -233,18 +241,18 @@ export default function CameraMonitor({
         }
 
         setViolations(currentViolations);
-        setIsWarning(currentViolations.length > 0);
+        setIsWarning(!isCheck && currentViolations.length > 0);
 
         const vStr = alertCodes.join(",");
         const isChanged = vStr !== prevViolationStrRef.current;
 
         if (currentViolations.length > 0 && (isChanged || now - lastReportTimeRef.current > 5000)) {
-            reportViolation(currentViolations, alertCodes, personCount, now, detections);
-            if (onViolation) onViolation(currentViolations);
+            if (!isCheck) reportViolation(currentViolations, alertCodes, personCount, now, detections);
+            if (onViolationRef.current) onViolationRef.current(currentViolations);
             prevViolationStrRef.current = vStr;
             lastReportTimeRef.current = now;
         } else if (currentViolations.length === 0 && isChanged) {
-            sendClearLog(now);
+            if (!isCheck) sendClearLog(now);
             prevViolationStrRef.current = "";
         }
     };
@@ -298,12 +306,14 @@ export default function CameraMonitor({
         <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
-                    <span className={`w-2 h-2 rounded-full ${status === "Ready" ? (isWarning ? "bg-red-500 animate-pulse" : "bg-green-500 animate-pulse") : "bg-orange-500"}`}></span> 
+                    <span className={`w-2 h-2 rounded-full ${status === "Ready" ? (isWarning ? "bg-red-500 animate-pulse" : "bg-green-500 animate-pulse") : "bg-orange-50"}`}></span> 
                     Camera giám sát
                 </span>
-                <span className="text-[10px] text-gray-400 font-mono">
-                    {status === "Ready" ? (metrics.time > 0 ? `LATENCY: ${metrics.time}ms` : "AI READY") : status}
-                </span>
+                {!isCheck && (
+                    <span className="text-[10px] text-gray-400 font-mono">
+                        {status === "Ready" ? (metrics.time > 0 ? `LATENCY: ${metrics.time}ms` : "AI READY") : status}
+                    </span>
+                )}
             </div>
             
             <div className={`aspect-video rounded-xl relative overflow-hidden flex items-center justify-center border-2 shadow-lg transition-colors duration-300 ${
@@ -324,7 +334,7 @@ export default function CameraMonitor({
                 )}
             </div>
 
-            {isWarning && (
+            {!isCheck && isWarning && (
                 <div className="bg-red-50 border border-red-100 rounded-lg p-2 animate-in fade-in slide-in-from-top-1">
                     <div className="flex items-center gap-1.5 text-red-600 mb-1">
                         <AlertCircle size={12} />
@@ -341,7 +351,7 @@ export default function CameraMonitor({
                 </div>
             )}
             
-            {!isWarning && status === "Ready" && (
+            {!isCheck && !isWarning && status === "Ready" && (
                 <div className="flex items-center gap-1.5 text-green-600 px-2">
                     <CheckCircle2 size={12} />
                     <span className="text-[10px] font-bold">Hệ thống an toàn</span>
