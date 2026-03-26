@@ -6,7 +6,7 @@
 Bash
 git clone https://github.com/your-username/edutrust.git
 
-cd edutrust
+cd client
 3. Cài đặt thư viện
    
 Bash
