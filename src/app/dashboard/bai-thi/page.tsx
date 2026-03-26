@@ -5,6 +5,7 @@ import {
     ChevronLeft, ChevronRight, Send,
     LayoutGrid, Trophy, Clock, Camera
 } from 'lucide-react';
+import CameraMonitor from '@/components/camera/CameraMonitor';
 
 const TOTAL_QUESTIONS = 40;
 const QUESTIONS_PER_PAGE = 10;
@@ -173,18 +174,10 @@ const ExamPage = () => {
                     </div>
 
                     <div className="p-4 border-t border-gray-100 bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
-                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Camera giám sát
-                            </span>
-                            <span className="text-[10px] text-gray-400 font-mono">REC 00:42:15</span>
-                        </div>
-                        <div className="aspect-video bg-black rounded-xl relative overflow-hidden flex items-center justify-center border-2 border-white shadow-lg">
-                            <Camera size={24} className="text-gray-800 opacity-50" />
-                            <div className="absolute top-2 left-2 text-[8px] text-white/50 font-mono">USER_CAM_01</div>
-                        </div>
+                        <CameraMonitor />
                         <p className="mt-2 text-[10px] text-center text-gray-400 italic font-medium">Vui lòng không rời khỏi khung hình</p>
                     </div>
+
                 </aside>
             </div>
         </div>
