@@ -15,7 +15,7 @@ export default function Header() {
                     alt="Logo"
                     width={100}
                     height={100}
-                    className="object-contain md:w-[120px]"
+                    className="object-contain md:w-30"
                 />
             </div>
 
@@ -35,19 +35,19 @@ export default function Header() {
                     <div className="hidden md:flex h-full items-stretch">
                         <div className="group flex items-center hover:bg-[#8a0028] transition-all duration-300 px-3 cursor-pointer border-l border-[#4a0014]">
                             <Megaphone size={18} className="text-white" />
-                            <span className="max-w-0 overflow-hidden whitespace-nowrap text-white text-[11px] font-bold uppercase transition-all duration-300 group-hover:max-w-[150px] group-hover:ml-2">
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap text-white text-[11px] font-bold uppercase transition-all duration-300 group-hover:max-w-37.5 group-hover:ml-2">
                                 Tin tức
                             </span>
                         </div>
                         <div className="group flex items-center hover:bg-[#8a0028] transition-all duration-300 px-3 cursor-pointer border-l border-[#4a0014]">
                             <CalendarCheck size={18} className="text-white" />
-                            <span className="max-w-0 overflow-hidden whitespace-nowrap text-white text-[11px] font-bold uppercase transition-all duration-300 group-hover:max-w-[150px] group-hover:ml-2">
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap text-white text-[11px] font-bold uppercase transition-all duration-300 group-hover:max-w-37.5 group-hover:ml-2">
                                 Lịch
                             </span>
                         </div>
                         <div className="group flex items-center hover:bg-[#8a0028] transition-all duration-300 px-3 cursor-pointer border-l border-[#4a0014]">
                             <Moon size={18} className="text-white" />
-                            <span className="max-w-0 overflow-hidden whitespace-nowrap text-white text-[11px] font-bold uppercase transition-all duration-300 group-hover:max-w-[150px] group-hover:ml-2">
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap text-white text-[11px] font-bold uppercase transition-all duration-300 group-hover:max-w-37.5 group-hover:ml-2">
                                 Chế độ tối
                             </span>
                         </div>
@@ -59,7 +59,7 @@ export default function Header() {
                     </div>
                 </div>
 
-                <div className="h-[50px] md:h-[70px] bg-white flex items-center px-4 justify-between">
+                <div className="h-12.5 md:h-17.5 bg-white flex items-center px-4 justify-between">
                     <nav className="hidden md:flex gap-6 font-bold text-[#5B0019] text-sm uppercase">
                         <a href="#" className="hover:text-red-700">Về chúng tôi</a>
                         <a href="#" className="hover:text-red-700">Tuyển sinh</a>
@@ -80,7 +80,7 @@ export default function Header() {
             </div>
             {
                 isMenuOpen && (
-                    <div className="absolute top-[90px] left-0 w-full bg-[#5B0019] text-white flex flex-col p-4 gap-4 md:hidden animate-in slide-in-from-top">
+                    <div className="absolute top-22.5 left-0 w-full bg-[#5B0019] text-white flex flex-col p-4 gap-4 md:hidden animate-in slide-in-from-top">
                         <div className="flex items-center gap-3 border-b border-white/20 pb-2">
                             <Megaphone size={20} /> <span>Tin tức</span>
                         </div>
