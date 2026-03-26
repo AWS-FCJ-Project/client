@@ -13,11 +13,21 @@ const TARGET_CLASSES: Record<number, string> = {
 
 const FORBIDDEN_IDS = new Set([67, 73]);
 
-export default function CameraMonitor({ onViolation }: { onViolation?: (violations: string[]) => void }) {
+export default function CameraMonitor({ 
+    onViolation, 
+    onStatusChange 
+}: { 
+    onViolation?: (violations: string[]) => void,
+    onStatusChange?: (status: string) => void
+}) {
     const [status, setStatus] = useState("Initializing...");
     const [isWarning, setIsWarning] = useState(false);
     const [violations, setViolations] = useState<string[]>([]);
     const [metrics, setMetrics] = useState({ time: 0, rawCount: 0 });
+
+    useEffect(() => {
+        if (onStatusChange) onStatusChange(status);
+    }, [status, onStatusChange]);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);

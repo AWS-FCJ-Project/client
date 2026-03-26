@@ -18,6 +18,8 @@ const ExamPage = () => {
     const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswers>({});
     const [timeLeft, setTimeLeft] = useState<number>(EXAM_DURATION);
     const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+    const [isStarted, setIsStarted] = useState(false);
+    const [cameraStatus, setCameraStatus] = useState("Initializing...");
     const [violationCount, setViolationCount] = useState(0);
     const [showCheatModal, setShowCheatModal] = useState(false);
     const [exitCountdown, setExitCountdown] = useState(3);
@@ -60,13 +62,13 @@ const ExamPage = () => {
     }, [currentPage]);
 
     useEffect(() => {
-        if (timeLeft > 0 && !isSubmitted) {
+        if (isStarted && timeLeft > 0 && !isSubmitted) {
             const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
             return () => clearInterval(timer);
-        } else if (timeLeft === 0 && !isSubmitted) {
+        } else if (isStarted && timeLeft === 0 && !isSubmitted) {
             setIsSubmitted(true);
         }
-    }, [timeLeft, isSubmitted]);
+    }, [timeLeft, isSubmitted, isStarted]);
 
     useEffect(() => {
         if (showCheatModal && exitCountdown > 0) {
@@ -78,12 +80,13 @@ const ExamPage = () => {
     }, [showCheatModal, exitCountdown]);
 
     const handleViolation = useCallback((vList: string[]) => {
+        if (!isStarted) return;
         setViolationCount(prev => {
             const n = prev + 1;
             if (n >= 4) setShowCheatModal(true);
             return n;
         });
-    }, []);
+    }, [isStarted]);
 
     const formatTime = (seconds: number): string => {
         const m = Math.floor(seconds / 60);
@@ -208,12 +211,82 @@ const ExamPage = () => {
                     </div>
 
                     <div className="p-4 border-t border-gray-100 bg-gray-50">
-                        <CameraMonitor onViolation={handleViolation} />
+                        <CameraMonitor onViolation={handleViolation} onStatusChange={setCameraStatus} />
                         <p className="mt-2 text-[10px] text-center text-gray-400 italic font-medium">Vui lòng không rời khỏi khung hình</p>
                     </div>
 
                 </aside>
             </div>
+
+            {/* Camera Check Screen */}
+            {!isStarted && !isSubmitted && (
+                <div className="fixed inset-0 z-[10001] bg-white flex items-center justify-center p-6 animate-in fade-in duration-500">
+                    <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div className="space-y-8">
+                            <div>
+                                <h1 className="text-4xl font-black text-gray-900 leading-tight">
+                                    Chuẩn bị hệ thống <br />
+                                    <span className="text-[#5B0019]">Giám sát AI</span>
+                                </h1>
+                                <p className="text-gray-500 mt-4 text-lg leading-relaxed">
+                                    Hệ thống đang khởi tạo môi trường thi an toàn. Vui lòng đảm bảo khuôn mặt nằm trong khung hình và không có vật lạ.
+                                </p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
+                                    <div className={`w-3 h-3 rounded-full animate-pulse ${cameraStatus === "Ready" ? "bg-green-500" : "bg-orange-500"}`} />
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-700">Trạng thái AI: {cameraStatus}</p>
+                                        <p className="text-xs text-gray-400">YOLOv26n ONNX Runtime Engine</p>
+                                    </div>
+                                </div>
+                                
+                                <ul className="space-y-3">
+                                    {[
+                                        "Ngồi ngay ngắn trước camera",
+                                        "Đảm bảo đủ ánh sáng",
+                                        "Không sử dụng tài liệu, điện thoại",
+                                        "Hệ thống sẽ ghi lại hình ảnh vi phạm"
+                                    ].map((text, i) => (
+                                        <li key={i} className="flex items-center gap-3 text-sm font-medium text-gray-600">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[#5B0019]" />
+                                            {text}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <button
+                                onClick={() => setIsStarted(true)}
+                                disabled={cameraStatus !== "Ready"}
+                                className={`w-full py-5 rounded-3xl font-black text-lg shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 ${
+                                    cameraStatus === "Ready" 
+                                    ? "bg-[#5B0019] text-white hover:bg-black" 
+                                    : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                }`}
+                            >
+                                {cameraStatus === "Ready" ? (
+                                    <>Bắt đầu làm bài <ChevronRight size={20} /></>
+                                ) : (
+                                    <>Đang khởi tạo AI... ({cameraStatus})</>
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="relative">
+                            <div className={`rounded-[2.5rem] overflow-hidden border-8 transition-all duration-700 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] ${
+                                cameraStatus === "Ready" ? "border-[#5B0019]" : "border-gray-200"
+                            }`}>
+                                <CameraMonitor onStatusChange={setCameraStatus} />
+                            </div>
+                            <div className="absolute -bottom-6 -right-6 bg-white p-4 rounded-3xl shadow-xl border border-gray-100 animate-bounce">
+                                <Camera className="text-[#5B0019]" size={32} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Cheat Detection Modal */}
             {showCheatModal && (
