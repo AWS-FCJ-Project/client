@@ -116,7 +116,7 @@ const AIChatSupport = () => {
             }
         } catch (error) {
             setMessages(prev => prev.map(msg =>
-                msg.id === aiMsgId ? { ...msg, content: "Lỗi kết nối rồi Loan ơi! Kiểm tra lại mạng nhé." } : msg
+                msg.id === aiMsgId ? { ...msg, content: "Lỗi kết nối rồi bạn ơi! Kiểm tra lại mạng nhé." } : msg
             ));
         } finally {
             setIsLoading(false);
@@ -159,12 +159,25 @@ const AIChatSupport = () => {
                                 }`}>
                                 {msg.role === 'ai' ? (
                                     <div className="markdown-container prose prose-sm max-w-none prose-headings:text-[#5B0019] overflow-x-auto">
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkMath]}
-                                            rehypePlugins={[rehypeKatex]}
-                                        >
-                                            {formatLaTeX(msg.content) || "..."}
-                                        </ReactMarkdown>
+                                        {msg.content ? (
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkMath]}
+                                                rehypePlugins={[rehypeKatex]}
+                                            >
+                                                {formatLaTeX(msg.content)}
+                                            </ReactMarkdown>
+                                        ) : (
+                                            <div className="flex flex-col gap-2">
+                                                <span className="text-xs text-gray-400 italic animate-pulse">
+                                                    EduTrust đang suy nghĩ...
+                                                </span>
+                                                <div className="dot-loading">
+                                                    <span></span>
+                                                    <span></span>
+                                                    <span></span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="whitespace-pre-wrap">{msg.content}</div>
