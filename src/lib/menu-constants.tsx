@@ -1,6 +1,6 @@
 import {
     Home, FileText, Calendar, Trophy, MessageSquare,
-    Folder, Layers, Users, BookOpen, Library, Lightbulb
+    Folder, Layers, Users, BookOpen, Library, Lightbulb, XCircle
 } from 'lucide-react';
 
 export const MENU_CONFIG = {
@@ -26,6 +26,7 @@ export const MENU_CONFIG = {
         { label: "Bài tập", icon: <FileText size={22} />, desc: "Quản lý bài tập", path: "/dashboard/assignment" },
         { label: "Đề thi", icon: <Folder size={22} />, desc: "Quản lý đề thi", path: "/dashboard/exams" },
         { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/classes" },
+        { label: "Vi phạm", icon: <XCircle size={22} />, desc: "Theo dõi vi phạm lớp chủ nhiệm", path: "/dashboard/violations" },
         { label: "Thư viện tài liệu", icon: <BookOpen size={22} />, desc: "Quản lý kho nội dung", path: "/dashboard/resources" },
     ]
 };

@@ -1,66 +1,45 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Search, Clock, FileText, PlayCircle,
     CheckCircle, XCircle, ChevronRight, BookOpen
 } from 'lucide-react';
 
-const MOCK_EXAMS = [
-    {
-        id: 1,
-        title: "Bài thi cuối kỳ: Hóa Học Vô Cơ",
-        subject: "Hóa học 12",
-        duration: 60,
-        questions: 40,
-        status: "pending",
-        deadline: "28/03/2026",
-        score: null
-    },
-    {
-        id: 2,
-        title: "Kiểm tra 15 phút: Đạo hàm và Ứng dụng",
-        subject: "Toán học 11",
-        duration: 15,
-        questions: 15,
-        status: "completed",
-        deadline: "25/03/2026",
-        score: 9.5
-    },
-    {
-        id: 3,
-        title: "Thi thử THPT Quốc gia 2026 Lần 1",
-        subject: "Tiếng Anh",
-        duration: 90,
-        questions: 50,
-        status: "pending",
-        deadline: "30/03/2026",
-        score: null
-    },
-    {
-        id: 4,
-        title: "Kiểm tra giữa kỳ: Động học chất điểm",
-        subject: "Vật lý 10",
-        duration: 45,
-        questions: 30,
-        status: "missed",
-        deadline: "20/03/2026",
-        score: 0
-    }
-];
+import Cookies from 'js-cookie';
 
 const ExamListPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("all");
+    const [exams, setExams] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const filteredExams = MOCK_EXAMS.filter(exam => {
+    useEffect(() => {
+        const fetchExams = async () => {
+            try {
+                const token = Cookies.get('auth_token');
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exams`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setExams(data);
+                }
+            } catch (error) {
+                console.error("Error fetching exams:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchExams();
+    }, []);
+
+    const filteredExams = exams.filter(exam => {
         const matchesSearch = exam.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             exam.subject.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesTab = activeTab === "all" ? true :
-            activeTab === "pending" ? exam.status === "pending" :
-                exam.status === "completed" || exam.status === "missed";
-        return matchesSearch && matchesTab;
+        // For now, simpler status matching since we don't have full results logic yet
+        return matchesSearch;
     });
 
     const getStatusBadge = (status: string) => {
