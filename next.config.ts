@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   allowedDevOrigins: [
     "anagrammatically-nonderogative-bibi.ngrok-free.dev",
-    "*.ngrok-free.dev"
+    "*.ngrok-free.dev",
+    "*.ngrok-free.app",
+    "21f9-210-245-36-176.ngrok-free.app"
   ],
   async rewrites() {
     return [
