@@ -1,8 +1,10 @@
 "use client";
 
-import { Trophy, Clock, ArrowRight } from 'lucide-react';
+import { Trophy, Clock, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { MENU_CONFIG } from '@/lib/menu-constants';
+import { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 
 const DashboardCard = ({ label, icon, desc, path }: any) => (
     <Link href={path} className="group">
@@ -23,10 +25,39 @@ const DashboardCard = ({ label, icon, desc, path }: any) => (
 );
 
 export default function DashboardPage() {
-    // Giả định role hiện tại là student (sau này lấy từ context/auth)
-    // const role = 'admin';
-    const role = 'student';
-    const cards = MENU_CONFIG[role] || [];
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const token = Cookies.get('auth_token');
+                if (!token) return;
+
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user-info`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setUser(data);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUser();
+    }, []);
+
+    if (loading) return (
+        <div className="flex h-64 items-center justify-center">
+            <Loader2 className="animate-spin text-[#5B0019]" size={40} />
+        </div>
+    );
+
+    const role = user?.role || 'student';
+    const cards = (MENU_CONFIG as any)[role] || [];
 
     return (
         <div className="space-y-8">
@@ -52,8 +83,8 @@ export default function DashboardPage() {
                             <Clock size={16} className="text-[#5B0019]" />
                             <span>Bạn còn <strong className="text-gray-800">2 bài tập</strong> cần nộp trước Chủ Nhật</span>
                         </div>
-                        <Link href="/hoc-tap" className="text-xs font-bold text-[#5B0019] hover:underline flex items-center gap-1">
-                            Học tiếp <ArrowRight size={12} />
+                        <Link href="/dashboard" className="text-xs font-bold text-[#5B0019] hover:underline flex items-center gap-1">
+                            Xem chi tiết <ArrowRight size={12} />
                         </Link>
                     </div>
                 </div>
@@ -71,17 +102,18 @@ export default function DashboardPage() {
                         </div>
                         <div className="mt-6">
                             <p className="text-4xl font-black">Hạng 5</p>
-                            <p className="text-xs opacity-80 uppercase font-bold tracking-widest mt-2">Lớp 12A1 • Top 10% toàn trường</p>
+                            <p className="text-xs opacity-80 uppercase font-bold tracking-widest mt-2">
+                                {role === 'student' ? `${user.class_name || 'Lớp học'} • Khối ${user.grade || ''}` : 'Toàn trường'}
+                            </p>
                         </div>
                     </div>
 
                     <Link
-                        href="/xep-hang"
+                        href="/dashboard"
                         className="relative z-10 mt-6 block text-center text-xs bg-white text-[#5B0019] py-3 rounded-xl font-black hover:bg-gray-50 transition-all active:scale-95 shadow-md"
                     >
                         CHI TIẾT BẢNG ĐIỂM
                     </Link>
-
 
                     <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors"></div>
                 </div>

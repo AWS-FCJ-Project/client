@@ -1,6 +1,6 @@
 import {
     Home, FileText, Calendar, Trophy, MessageSquare,
-    Folder, Layers, Users, BookOpen, Library, Lightbulb, XCircle
+    Folder, Layers, Users, BookOpen, Library, Lightbulb, XCircle, UserPlus
 } from 'lucide-react';
 
 export const MENU_CONFIG = {
@@ -14,19 +14,18 @@ export const MENU_CONFIG = {
         { label: "Giám sát Camera", icon: <Lightbulb size={22} />, desc: "Test tính năng giám sát", path: "/dashboard/test-camera" },
     ],
     admin: [
-        { label: "Trang chủ", icon: <Home size={22} />, path: "/dashboard" },
-        { label: "Bài tập", icon: <FileText size={22} />, desc: "Quản lý bài tập", path: "/dashboard/assignment" },
+        { label: "Trang chủ", icon: <Home size={22} />, desc: "Tổng quan", path: "/dashboard" },
         { label: "Đề thi", icon: <Folder size={22} />, desc: "Quản lý đề thi", path: "/dashboard/exams" },
         { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/classes" },
         { label: "Giáo viên", icon: <Users size={22} />, desc: "Quản lý giáo viên", path: "/dashboard/teachers" },
-        { label: "Thư viện tài liệu", icon: <BookOpen size={22} />, desc: "Quản lý kho nội dung", path: "/dashboard/resources" },
+        { label: "Học sinh", icon: <UserPlus size={22} />, desc: "Quản lý học sinh", path: "/dashboard/students" },
+        { label: "Tạo tài khoản", icon: <UserPlus size={22} />, desc: "Quản trị người dùng", path: "/dashboard/management" },
     ],
     teacher: [
-        { label: "Trang chủ", icon: <Home size={22} />, path: "/dashboard" },
-        { label: "Bài tập", icon: <FileText size={22} />, desc: "Quản lý bài tập", path: "/dashboard/assignment" },
+        { label: "Trang chủ", icon: <Home size={22} />, desc: "Tổng quan", path: "/dashboard" },
         { label: "Đề thi", icon: <Folder size={22} />, desc: "Quản lý đề thi", path: "/dashboard/exams" },
-        { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/classes" },
+        { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học tại đây", path: "/dashboard/classes" },
+        { label: "Thư viện tài liệu", icon: <BookOpen size={22} />, desc: "Kho học liệu", path: "/dashboard/resources" },
         { label: "Vi phạm", icon: <XCircle size={22} />, desc: "Theo dõi vi phạm lớp chủ nhiệm", path: "/dashboard/violations" },
-        { label: "Thư viện tài liệu", icon: <BookOpen size={22} />, desc: "Quản lý kho nội dung", path: "/dashboard/resources" },
     ]
 };
