@@ -1,15 +1,24 @@
-import { UserCircle, TrendingUp } from 'lucide-react';
+"use client";
 
-const TeacherStudents = () => {
+import React from 'react';
+import { UserCircle } from 'lucide-react';
+
+const TeacherStudents: React.FC = () => {
     return (
-        <div className="p-8 text-center">
-            <div className="bg-white p-12 rounded-[3rem] border-2 border-dashed border-gray-200">
-                <UserCircle size={64} className="mx-auto text-gray-300 mb-4" />
-                <h2 className="text-xl font-bold text-gray-800">Danh sách Học sinh</h2>
-                <p className="text-gray-500 mb-6">Chọn lớp để xem danh sách học sinh chi tiết</p>
-                <div className="flex justify-center gap-3">
-                    <button className="px-6 py-2 bg-gray-100 rounded-xl font-bold text-sm">Lớp 12A1</button>
-                    <button className="px-6 py-2 bg-gray-100 rounded-xl font-bold text-sm">Lớp 12A5</button>
+        <div className="p-8 flex items-center justify-center min-h-[400px]">
+            <div className="bg-white p-12 rounded-[3.5rem] border border-gray-100 shadow-sm max-w-md w-full text-center">
+                <div className="w-20 h-20 bg-gray-50 text-gray-300 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                    <UserCircle size={48} />
+                </div>
+                <h2 className="text-2xl font-black text-gray-800 mb-2">Danh sách Học sinh</h2>
+                <p className="text-sm text-gray-400 font-medium mb-8 leading-relaxed">Vui lòng chọn lớp học để xem và quản lý danh sách học sinh chi tiết</p>
+                <div className="flex flex-col gap-3">
+                    <button className="w-full py-3.5 bg-gray-50 hover:bg-[#5B0019] hover:text-white rounded-2xl font-black text-xs text-gray-500 transition-all uppercase tracking-widest">
+                        Lớp 12A1
+                    </button>
+                    <button className="w-full py-3.5 bg-gray-50 hover:bg-[#5B0019] hover:text-white rounded-2xl font-black text-xs text-gray-500 transition-all uppercase tracking-widest">
+                        Lớp 12A5
+                    </button>
                 </div>
             </div>
         </div>
