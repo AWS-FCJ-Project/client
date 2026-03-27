@@ -11,6 +11,7 @@ export const MENU_CONFIG = {
         { label: "Bài thi", icon: <BookOpen size={22} />, desc: "Đề thi", path: "/dashboard/danh-sach-bai-thi" },
         { label: "Kết quả", icon: <Trophy size={22} />, desc: "Kết quả học tập", path: "/dashboard/ket-qua" },
         { label: "AI hỗ trợ", icon: <MessageSquare size={22} />, desc: "Hỗ trợ học tập bằng AI", path: "/dashboard/chat-ai-ho-tro" },
+        { label: "Giám sát Camera", icon: <Lightbulb size={22} />, desc: "Test tính năng giám sát", path: "/dashboard/test-camera" },
     ],
     admin: [
         { label: "Trang chủ", icon: <Home size={22} />, path: "/dashboard" },
