@@ -16,7 +16,7 @@ export const MENU_CONFIG = {
         { label: "Trang chủ", icon: <Home size={22} />, path: "/dashboard" },
         { label: "Bài tập", icon: <FileText size={22} />, desc: "Quản lý bài tập", path: "/dashboard/bai-tap" },
         { label: "Đề thi", icon: <Folder size={22} />, desc: "Quản lý đề thi", path: "/dashboard/exams" },
-        { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/students" },
+        { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/classes" },
         { label: "Giáo viên", icon: <Users size={22} />, desc: "Quản lý giáo viên", path: "/dashboard/teachers" },
         { label: "Thư viện tài liệu", icon: <BookOpen size={22} />, desc: "Quản lý kho nội dung", path: "/dashboard/resources" },
     ],
@@ -24,7 +24,7 @@ export const MENU_CONFIG = {
         { label: "Trang chủ", icon: <Home size={22} />, path: "/dashboard" },
         { label: "Bài tập", icon: <FileText size={22} />, desc: "Quản lý bài tập", path: "/dashboard/bai-tap" },
         { label: "Đề thi", icon: <Folder size={22} />, desc: "Quản lý đề thi", path: "/dashboard/exams" },
-        { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/students" },
+        { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/classes" },
         { label: "Thư viện tài liệu", icon: <BookOpen size={22} />, desc: "Quản lý kho nội dung", path: "/dashboard/resources" },
     ]
 };
