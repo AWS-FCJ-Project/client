@@ -132,19 +132,16 @@ const TabButton = ({ label, active, onClick }: any) => (
     </button>
 );
 
-// --- interfaces ---
 interface Assignment {
     id: number; title: string; subject: string; deadline: string;
     status: string; type: string; description?: string;
     questions?: { id: number; question: string; options: string[] }[];
 }
 
-// Chú ý: Component ActionModal bạn giữ nguyên phần logic TextArea và Quiz nhé
-// Mình chỉ tối ưu lại phần UI bao quanh để nó gọn gàng.
 const ActionModal = ({ assignment, onClose }: { assignment: Assignment | null, onClose: () => void }) => {
     if (!assignment) return null;
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="font-black text-gray-800 uppercase tracking-tight">Chi tiết nhiệm vụ</h2>
