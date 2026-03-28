@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { UserPlus, Users, FileSpreadsheet, Download, Upload, Save, CheckCircle2, AlertCircle, Loader2, FileCode } from 'lucide-react';
+import { UserPlus, Users, FileSpreadsheet, Download, Upload, Save, CheckCircle2, AlertCircle, Loader2, FileCode, Eye, EyeOff } from 'lucide-react';
 import Cookies from 'js-cookie';
 import * as XLSX from 'xlsx';
 import { useSearchParams } from 'next/navigation';
@@ -13,6 +13,7 @@ const ManagementPage = () => {
     const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     // Single Creation State
     const [formData, setFormData] = useState({
@@ -58,8 +59,8 @@ const ManagementPage = () => {
 
     const downloadTemplate = (role: string, format: 'xlsx' | 'csv') => {
         const data = role === 'student' 
-            ? [{ email: 'hs1@gmail.com', password: 'Password123#', name: 'Nguyễn Văn A', class_name: '10A1', grade: 10 }]
-            : [{ email: 'gv1@gmail.com', password: 'Password123#', name: 'Trần Thị B', role: role }];
+            ? [{ email: 'hs1@gmail.com', password: 'Password123#', name: 'Nguyễn Văn A', role: 'student', class_name: '10A1', grade: 10 }]
+            : [{ email: 'gv1@gmail.com', password: 'Password123#', name: 'Trần Thị B', role: 'teacher' }];
         
         if (format === 'xlsx') {
             const ws = XLSX.utils.json_to_sheet(data);
@@ -184,14 +185,23 @@ const ManagementPage = () => {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-2">Mật khẩu</label>
-                                <input 
-                                    required
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                    className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
-                                    placeholder="••••••••"
-                                />
+                                <div className="relative">
+                                    <input 
+                                        required
+                                        type={showPassword ? "text" : "password"}
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                        className="w-full px-6 py-4 pr-14 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
+                                        placeholder="••••••••"
+                                    />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#5B0019] transition-colors focus:outline-none p-1"
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-2">Vai trò</label>
