@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { Save, ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
 
-const CreateExamPage = () => {
+const CreateExamForm = () => {
+    const searchParams = useSearchParams();
+    const preselectedClassId = searchParams.get('class_id');
+    
     const [loading, setLoading] = useState(false);
     const [classes, setClasses] = useState<any[]>([]);
     const [formData, setFormData] = useState({
@@ -28,13 +32,18 @@ const CreateExamPage = () => {
                 if (res.ok) {
                     const data = await res.json();
                     setClasses(data);
+                    
+                    // Auto-fill class if provided in URL
+                    if (preselectedClassId) {
+                        setFormData(prev => ({ ...prev, class_id: preselectedClassId }));
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching classes:", error);
             }
         };
         fetchClasses();
-    }, []);
+    }, [preselectedClassId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,10 +78,10 @@ const CreateExamPage = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/exams" className="p-2 hover:bg-gray-100 rounded-full">
+                    <Link href="/dashboard/exams" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <ArrowLeft size={24} />
                     </Link>
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">Tạo Đề Thi Mới</h1>
@@ -83,7 +92,7 @@ const CreateExamPage = () => {
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest">Tiêu đề đề thi</label>
+                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Tiêu đề đề thi</label>
                             <input 
                                 required
                                 type="text" 
@@ -94,7 +103,7 @@ const CreateExamPage = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest">Môn học</label>
+                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Môn học</label>
                             <input 
                                 required
                                 type="text" 
@@ -108,12 +117,12 @@ const CreateExamPage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                          <div className="space-y-2">
-                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest">Lớp học</label>
+                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Lớp học</label>
                             <select 
                                 required
                                 value={formData.class_id}
                                 onChange={(e) => setFormData({...formData, class_id: e.target.value})}
-                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
+                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold text-[#5B0019]"
                             >
                                 <option value="">Chọn lớp</option>
                                 {classes.map(cls => (
@@ -122,7 +131,7 @@ const CreateExamPage = () => {
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest">Bắt đầu</label>
+                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Bắt đầu</label>
                             <input 
                                 required
                                 type="datetime-local" 
@@ -132,7 +141,7 @@ const CreateExamPage = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest">Kết thúc</label>
+                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Kết thúc</label>
                             <input 
                                 required
                                 type="datetime-local" 
@@ -145,11 +154,11 @@ const CreateExamPage = () => {
                 </div>
 
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Danh sách câu hỏi</h2>
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight pl-2">Danh sách câu hỏi</h2>
                     {formData.questions.map((q, qIdx) => (
-                        <div key={qIdx} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-4">
+                        <div key={qIdx} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-4 hover:shadow-md transition-shadow">
                             <div className="flex justify-between items-center">
-                                <span className="text-lg font-black text-[#5B0019]">Câu {qIdx + 1}</span>
+                                <span className="text-lg font-black text-[#5B0019] uppercase tracking-tighter">Câu {qIdx + 1}</span>
                                 {formData.questions.length > 1 && (
                                     <button 
                                         type="button"
@@ -158,13 +167,13 @@ const CreateExamPage = () => {
                                             newQ.splice(qIdx, 1);
                                             setFormData({...formData, questions: newQ});
                                         }}
-                                        className="text-red-400 hover:text-red-600"
-                                    ><Trash2 size={20} /></button>
+                                        className="p-2 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all"
+                                    ><Trash2 size={18} /></button>
                                 )}
                             </div>
                             <textarea 
                                 required
-                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold italic"
+                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold italic text-sm"
                                 placeholder="Nhập nội dung câu hỏi..."
                                 value={q.q}
                                 onChange={(e) => {
@@ -173,9 +182,9 @@ const CreateExamPage = () => {
                                     setFormData({...formData, questions: newQ});
                                 }}
                             />
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {q.options.map((opt, oIdx) => (
-                                    <div key={oIdx} className="flex items-center gap-3">
+                                    <div key={oIdx} className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-transparent focus-within:border-red-100 transition-all">
                                         <input 
                                             type="radio" 
                                             checked={q.correct === oIdx}
@@ -196,7 +205,7 @@ const CreateExamPage = () => {
                                                 newQ[qIdx].options[oIdx] = e.target.value;
                                                 setFormData({...formData, questions: newQ});
                                             }}
-                                            className="flex-1 px-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#5B0019] text-sm font-medium"
+                                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium"
                                         />
                                     </div>
                                 ))}
@@ -206,16 +215,16 @@ const CreateExamPage = () => {
                     <button 
                         type="button"
                         onClick={addQuestion}
-                        className="w-full py-4 border-2 border-dashed border-gray-200 rounded-[2.5rem] text-gray-400 font-black hover:border-[#5B0019] hover:text-[#5B0019] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-6 border-2 border-dashed border-gray-100 rounded-[2.5rem] text-gray-400 font-bold hover:border-[#5B0019] hover:text-[#5B0019] hover:bg-red-50/20 transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
                     >
-                        <Plus size={20} /> Thêm câu hỏi
+                        <Plus size={20} /> Thêm câu hỏi mới
                     </button>
                 </div>
 
-                <div className="flex justify-end pt-8">
+                <div className="flex justify-end pt-8 pb-12">
                     <button 
                         disabled={loading}
-                        className="bg-[#5B0019] text-white px-12 py-4 rounded-[2rem] font-black flex items-center gap-2 hover:bg-black transition-all shadow-xl shadow-red-900/20 disabled:opacity-50"
+                        className="bg-[#5B0019] text-white px-12 py-5 rounded-[2rem] font-black flex items-center gap-2 hover:bg-black transition-all shadow-xl shadow-red-900/20 active:scale-95 disabled:opacity-50 uppercase tracking-widest text-sm"
                     >
                         {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                         Lưu Đề Thi
@@ -223,6 +232,14 @@ const CreateExamPage = () => {
                 </div>
             </form>
         </div>
+    );
+};
+
+const CreateExamPage = () => {
+    return (
+        <Suspense fallback={<div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin text-[#5B0019]" size={40} /></div>}>
+            <CreateExamForm />
+        </Suspense>
     );
 };
 

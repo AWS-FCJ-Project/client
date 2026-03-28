@@ -121,30 +121,33 @@ const ExamListPage = () => {
 
                                 <div className="flex items-center gap-6 text-sm text-gray-600 mb-6 bg-gray-50 w-fit px-4 py-2 rounded-xl">
                                     <span className="flex items-center gap-2 font-medium">
-                                        <Clock size={16} className="text-gray-400" /> {exam.duration} phút
+                                        <Clock size={16} className="text-gray-400" /> {
+                                            // Calculate duration in minutes if possible
+                                            Math.round((new Date(exam.end_time).getTime() - new Date(exam.start_time).getTime()) / 60000)
+                                        } phút
                                     </span>
                                     <span className="text-gray-300">|</span>
                                     <span className="flex items-center gap-2 font-medium">
-                                        <FileText size={16} className="text-gray-400" /> {exam.questions} câu
+                                        <FileText size={16} className="text-gray-400" /> {exam.questions?.length || 0} câu
                                     </span>
                                 </div>
 
                                 <div className="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between">
                                     <div className="text-sm">
-                                        <span className="text-gray-400">Hạn chót: </span>
-                                        <span className="font-bold text-gray-700">{exam.deadline}</span>
+                                        <span className="text-gray-400">Bắt đầu: </span>
+                                        <span className="font-bold text-gray-700">{new Date(exam.start_time).toLocaleString('vi-VN', {hour: '2-digit', minute:'2-digit', day: '2-digit', month: '2-digit'})}</span>
                                     </div>
 
-                                    {exam.status === 'pending' ? (
+                                    {(!exam.status || exam.status === 'pending') ? (
                                         <Link
-                                            href="/dashboard/bai-thi"
+                                            href={`/dashboard/bai-thi/${exam.id}`}
                                             className="flex items-center gap-2 px-5 py-2.5 bg-[#5B0019] text-white rounded-xl font-bold text-sm hover:bg-red-900 transition-colors shadow-md shadow-red-900/20 active:scale-95"
                                         >
                                             <PlayCircle size={18} /> Vào thi
                                         </Link>
                                     ) : (
                                         <div className="flex items-center gap-3">
-                                            {exam.score !== null && (
+                                            {exam.score !== undefined && exam.score !== null && (
                                                 <span className="font-black text-lg text-[#5B0019]">{exam.score}đ</span>
                                             )}
                                             <button className="flex items-center gap-1 text-sm font-bold text-gray-500 hover:text-[#5B0019] transition-colors">

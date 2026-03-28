@@ -20,6 +20,7 @@ export const MENU_CONFIG = {
         { label: "Giáo viên", icon: <Users size={22} />, desc: "Quản lý giáo viên", path: "/dashboard/teachers" },
         { label: "Học sinh", icon: <UserPlus size={22} />, desc: "Quản lý học sinh", path: "/dashboard/students" },
         { label: "Tạo tài khoản", icon: <UserPlus size={22} />, desc: "Quản trị người dùng", path: "/dashboard/management" },
+        { label: "AI hỗ trợ", icon: <MessageSquare size={22} />, desc: "Trợ lý ảo thông minh", path: "/dashboard/chat-ai-ho-tro" },
         { label: "Giám sát Camera", icon: <Lightbulb size={22} />, desc: "Test tính năng giám sát", path: "/dashboard/test-camera" },
     ],
     teacher: [
@@ -28,6 +29,7 @@ export const MENU_CONFIG = {
         { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học tại đây", path: "/dashboard/classes" },
         { label: "Thư viện tài liệu", icon: <BookOpen size={22} />, desc: "Kho học liệu", path: "/dashboard/resources" },
         { label: "Vi phạm", icon: <XCircle size={22} />, desc: "Theo dõi vi phạm lớp chủ nhiệm", path: "/dashboard/violations" },
+        { label: "AI hỗ trợ", icon: <MessageSquare size={22} />, desc: "Trợ lý giảng dạy AI", path: "/dashboard/chat-ai-ho-tro" },
         { label: "Giám sát Camera", icon: <Lightbulb size={22} />, desc: "Test tính năng giám sát", path: "/dashboard/test-camera" },
     ]
 };

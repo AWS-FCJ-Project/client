@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Eraser } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Eraser, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -17,12 +17,41 @@ interface Message {
 }
 
 const AIChatSupport = () => {
+    const [user, setUser] = useState<any>(null);
     const [messages, setMessages] = useState<Message[]>([
-        { id: 1, role: 'ai', content: 'Chào Thanh Loan! Mình là trợ lý ảo EduTrust. Bạn cần mình hỗ trợ gì không?' }
+        { id: 1, role: 'ai', content: 'Chào bạn! Mình là trợ lý ảo EduTrust. Bạn cần mình hỗ trợ gì không?' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isPageLoading, setIsPageLoading] = useState(true);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Fetch User Info to personalize
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const token = Cookies.get("auth_token");
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user-info`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data);
+                    // Update greeting with name
+                    setMessages([{ 
+                        id: 1, 
+                        role: 'ai', 
+                        content: `Chào ${data.name}! Mình là trợ lý ảo EduTrust. Bạn cần mình hỗ trợ gì không?` 
+                    }]);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsPageLoading(false);
+            }
+        };
+        fetchUser();
+    }, []);
 
     const formatLaTeX = (text: string) => {
         if (!text) return "";
@@ -73,7 +102,7 @@ const AIChatSupport = () => {
                 },
                 body: JSON.stringify({
                     question: userContent,
-                    conversation_id: "loan_session_01"
+                    conversation_id: user ? `chat_${user.id || user._id}` : "generic_session"
                 })
             });
 
@@ -123,6 +152,14 @@ const AIChatSupport = () => {
         }
     };
 
+    if (isPageLoading) {
+        return (
+            <div className="flex h-64 items-center justify-center">
+                <Loader2 className="animate-spin text-[#5B0019]" size={40} />
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
@@ -132,11 +169,11 @@ const AIChatSupport = () => {
                     </div>
                     <div>
                         <h2 className="font-bold text-gray-800">EduTrust AI Assistant</h2>
-                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Stable Stream Mode</span>
+                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">AI Trợ lý đa năng</span>
                     </div>
                 </div>
                 <button
-                    onClick={() => setMessages([{ id: 1, role: 'ai', content: 'Lịch sử đã được làm mới!' }])}
+                    onClick={() => setMessages([{ id: 1, role: 'ai', content: `Lịch sử đã được làm mới, chào mừng ${user?.name || ''} trở lại!` }])}
                     className="p-2 hover:bg-red-50 hover:text-red-500 transition-colors rounded-full text-gray-400"
                     title="Xóa lịch sử chat"
                 >
@@ -202,7 +239,7 @@ const AIChatSupport = () => {
                             }
                         }}
                         className="w-full pl-6 pr-14 py-4 bg-gray-50 border border-gray-200 focus:border-[#5B0019] focus:ring-1 focus:ring-[#5B0019] rounded-2xl outline-none transition-all disabled:opacity-50"
-                        placeholder={isLoading ? "AI đang trả lời..." : "Hỏi Loan câu khác xem nào..."}
+                        placeholder={isLoading ? "AI đang trả lời..." : `Bạn muốn hỏi gì không ${user?.name || ''}?`}
                     />
                     <button
                         onClick={handleSend}
