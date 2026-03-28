@@ -42,6 +42,7 @@ const ExamPage = () => {
     const [user, setUser] = useState<any>(null);
     const [statusLoading, setStatusLoading] = useState(true);
     const [lockData, setLockData] = useState<{ reason: string, info?: any } | null>(null);
+    const [fetchError, setFetchError] = useState<string | null>(null);
 
     // --- 1. Fetch User & Exam Status ---
     useEffect(() => {
@@ -49,7 +50,8 @@ const ExamPage = () => {
             try {
                 const token = Cookies.get('auth_token');
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-                
+                if (!apiUrl) throw new Error("API URL not configured");
+
                 // Get User Info
                 const userRes = await fetch(`${apiUrl}/users/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -68,41 +70,46 @@ const ExamPage = () => {
     }, [examId]);
 
     // --- 1. Fetch Exam Data (Including Lock Reason) ---
-    useEffect(() => {
-        const fetchExam = async () => {
-            try {
-                const token = Cookies.get('auth_token');
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exams/${examId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.is_locked) {
-                        setLockData({ 
-                            reason: data.lock_reason, 
-                            info: data.start_time || data.end_time || data.submission_status 
-                        });
-                        setExam(data);
-                    } else {
-                        setExam(data);
-                        // Timer logic was using (end-start), but we should use his current remaining time if he re-enters
-                        // For now, simpler: use end_time - now
-                        const end = new Date(data.end_time).getTime();
-                        const now = Date.now();
-                        setTimeLeft(Math.max(0, Math.floor((end - now) / 1000)));
-                    }
+    const fetchExam = useCallback(async () => {
+        setLoading(true);
+        setFetchError(null);
+        try {
+            const token = Cookies.get('auth_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            if (!apiUrl) throw new Error("API URL not configured");
+
+            const res = await fetch(`${apiUrl}/exams/${examId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.is_locked) {
+                    setLockData({ 
+                        reason: data.lock_reason, 
+                        info: data.start_time || data.end_time || data.submission_status 
+                    });
+                    setExam(data);
                 } else {
-                    console.error("Failed to fetch exam");
-                    router.push('/dashboard/danh-sach-bai-thi');
+                    setExam(data);
+                    const end = new Date(data.end_time).getTime();
+                    const now = Date.now();
+                    setTimeLeft(Math.max(0, Math.floor((end - now) / 1000)));
                 }
-            } catch (error) {
-                console.error("Error fetching exam:", error);
-            } finally {
-                setLoading(false);
+            } else {
+                const errData = await res.json().catch(() => ({ detail: "Không thể tải dữ liệu bài thi" }));
+                setFetchError(errData.detail || "Lỗi máy chủ khi tải bài thi");
             }
-        };
-        if (examId) fetchExam();
+        } catch (error: any) {
+            console.error("Error fetching exam:", error);
+            setFetchError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.");
+        } finally {
+            setLoading(false);
+        }
     }, [examId, router]);
+
+    useEffect(() => {
+        if (examId) fetchExam();
+    }, [examId, fetchExam]);
 
     // --- 2. Camera Positioning ---
     useEffect(() => {
@@ -220,6 +227,28 @@ const ExamPage = () => {
             <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin text-[#5B0019] mb-4" size={48} />
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-xs animate-pulse">Đang định danh hệ thống...</p>
+            </div>
+        );
+    }
+
+    if (fetchError) {
+        return (
+            <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+                <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-md">
+                    <AlertTriangle size={48} />
+                </div>
+                <h1 className="text-3xl font-black text-gray-900 mb-2">Lỗi tải bài thi</h1>
+                <p className="text-gray-500 font-medium mb-8 max-w-md">{fetchError}</p>
+                <div className="flex gap-4">
+                    <button 
+                        onClick={() => router.push('/dashboard/danh-sach-bai-thi')} 
+                        className="px-8 py-4 bg-gray-100 text-gray-600 rounded-2xl font-black hover:bg-gray-200 transition-all uppercase tracking-widest text-xs"
+                    >Quay về</button>
+                    <button 
+                        onClick={() => fetchExam()} 
+                        className="px-8 py-4 bg-[#5B0019] text-white rounded-2xl font-black shadow-lg hover:bg-black transition-all active:scale-95 uppercase tracking-widest text-xs"
+                    >Thử lại</button>
+                </div>
             </div>
         );
     }
