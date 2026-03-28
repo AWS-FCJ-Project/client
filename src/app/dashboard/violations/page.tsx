@@ -191,10 +191,10 @@ const ViolationsPage = () => {
                                                                 <div 
                                                                     key={i} 
                                                                     className="aspect-video bg-gray-100 rounded-[1.5rem] border border-gray-100 overflow-hidden group/img relative shadow-sm hover:shadow-md transition-all cursor-zoom-in"
-                                                                    onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/storage/${img}`, '_blank')}
+                                                                    onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/camera/violation-image?path=${img}`, '_blank')}
                                                                 >
                                                                     <img 
-                                                                        src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${img}`} 
+                                                                        src={`${process.env.NEXT_PUBLIC_API_URL}/camera/violation-image?path=${img}`} 
                                                                         alt="violation proof" 
                                                                         className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700"
                                                                     />

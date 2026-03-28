@@ -61,6 +61,7 @@ export default function CameraMonitor({
     const animationFrameIdRef = useRef<number>(0);
     const lastReportTimeRef = useRef<number>(0);
     const prevViolationStrRef = useRef<string>("");
+    const violationCountRef = useRef<number>(0);
 
     // --- 1. Load Model ---
     useEffect(() => {
@@ -301,7 +302,10 @@ export default function CameraMonitor({
             ctx.strokeRect(rx, ry, rw, rh);
         });
 
-        const b64 = snap.toDataURL("image/jpeg", 0.6).split(",")[1];
+        let b64: string | null = null;
+        if (violationCountRef.current < 4) {
+            b64 = snap.toDataURL("image/jpeg", 0.6).split(",")[1];
+        }
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
         fetch(`${apiUrl}/camera/log`, {
@@ -317,6 +321,8 @@ export default function CameraMonitor({
                 exam_id: currentIds.examId,
                 student_id: currentIds.studentId
             })
+        }).then(res => {
+            if (res.ok && b64) violationCountRef.current += 1;
         }).catch(e => console.warn("Could not send log to backend:", e));
     };
 
