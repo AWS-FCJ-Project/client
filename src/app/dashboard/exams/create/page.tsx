@@ -19,6 +19,7 @@ const CreateExamForm = () => {
         class_id: '',
         start_time: '',
         end_time: '',
+        duration: 60,
         questions: [{ q: '', options: ['', '', '', ''], correct: 0 }]
     });
 
@@ -150,6 +151,17 @@ const CreateExamForm = () => {
                                 className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
                             />
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Thời gian làm bài (Phút)</label>
+                            <input 
+                                required
+                                type="number" 
+                                value={formData.duration}
+                                onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value) || 0})}
+                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
+                                placeholder="VD: 60"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -182,19 +194,24 @@ const CreateExamForm = () => {
                                     setFormData({...formData, questions: newQ});
                                 }}
                             />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {q.options.map((opt, oIdx) => (
-                                    <div key={oIdx} className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-transparent focus-within:border-red-100 transition-all">
-                                        <input 
-                                            type="radio" 
-                                            checked={q.correct === oIdx}
-                                            onChange={() => {
-                                                const newQ = [...formData.questions];
-                                                newQ[qIdx].correct = oIdx;
-                                                setFormData({...formData, questions: newQ});
-                                            }}
-                                            className="w-5 h-5 text-[#5B0019] focus:ring-[#5B0019]"
-                                        />
+                                    <div key={oIdx} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
+                                        q.correct === oIdx ? 'bg-[#5B0019]/5 border-[#5B0019]/30 ring-1 ring-[#5B0019]/20' : 'bg-gray-50/50 border-transparent'
+                                    }`}>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <input 
+                                                type="radio" 
+                                                checked={q.correct === oIdx}
+                                                onChange={() => {
+                                                    const newQ = [...formData.questions];
+                                                    newQ[qIdx].correct = oIdx;
+                                                    setFormData({...formData, questions: newQ});
+                                                }}
+                                                className="w-5 h-5 text-[#5B0019] focus:ring-[#5B0019] cursor-pointer"
+                                            />
+                                            {q.correct === oIdx && <span className="text-[7px] font-black text-[#5B0019] uppercase">Đúng</span>}
+                                        </div>
                                         <input 
                                             required
                                             type="text"
@@ -205,7 +222,7 @@ const CreateExamForm = () => {
                                                 newQ[qIdx].options[oIdx] = e.target.value;
                                                 setFormData({...formData, questions: newQ});
                                             }}
-                                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium"
+                                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold"
                                         />
                                     </div>
                                 ))}

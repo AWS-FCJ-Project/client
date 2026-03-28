@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     ChevronLeft, ChevronRight, Send,
-    LayoutGrid, Trophy, Clock, Camera, X, AlertTriangle, Loader2, Activity
+    LayoutGrid, Trophy, Clock, Camera, X, AlertTriangle, Loader2, Activity, CheckCircle
 } from 'lucide-react';
 import CameraMonitor from '@/components/camera/CameraMonitor';
 import Cookies from 'js-cookie';
@@ -41,7 +41,7 @@ const ExamPage = () => {
 
     const [user, setUser] = useState<any>(null);
     const [statusLoading, setStatusLoading] = useState(true);
-    const [lockReason, setLockReason] = useState<string | null>(null);
+    const [lockData, setLockData] = useState<{ reason: string, info?: any } | null>(null);
 
     // --- 1. Fetch User & Exam Status ---
     useEffect(() => {
@@ -58,17 +58,6 @@ const ExamPage = () => {
                     const uData = await userRes.json();
                     setUser(uData);
                 }
-
-                // Check Exam Status (Block re-entry)
-                const statusRes = await fetch(`${apiUrl}/exams/${examId}/status`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (statusRes.ok) {
-                    const sData = await statusRes.json();
-                    if (sData.is_submitted) {
-                        setLockReason(sData.status === "failed" ? "Bị đình chỉ thi do vi phạm AI" : "Đã nộp bài");
-                    }
-                }
             } catch (error) {
                 console.error("Init Error:", error);
             } finally {
@@ -78,7 +67,7 @@ const ExamPage = () => {
         init();
     }, [examId]);
 
-    // --- 1. Fetch Exam Data ---
+    // --- 1. Fetch Exam Data (Including Lock Reason) ---
     useEffect(() => {
         const fetchExam = async () => {
             try {
@@ -89,13 +78,18 @@ const ExamPage = () => {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.is_locked) {
-                        setLockReason(data.submission_status === "failed" ? "Bị đình chỉ thi do vi phạm AI" : "Đã nộp bài");
-                        setExam(data); // Still set to show titles
+                        setLockData({ 
+                            reason: data.lock_reason, 
+                            info: data.start_time || data.end_time || data.submission_status 
+                        });
+                        setExam(data);
                     } else {
                         setExam(data);
-                        const start = new Date(data.start_time).getTime();
+                        // Timer logic was using (end-start), but we should use his current remaining time if he re-enters
+                        // For now, simpler: use end_time - now
                         const end = new Date(data.end_time).getTime();
-                        setTimeLeft(Math.max(0, Math.floor((end - start) / 1000)));
+                        const now = Date.now();
+                        setTimeLeft(Math.max(0, Math.floor((end - now) / 1000)));
                     }
                 } else {
                     console.error("Failed to fetch exam");
@@ -230,14 +224,56 @@ const ExamPage = () => {
         );
     }
 
-    if (lockReason) {
+    if (lockData) {
+        const renderLockContent = () => {
+            switch(lockData.reason) {
+                case "disqualified":
+                    return (
+                        <>
+                            <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-xl animate-bounce">
+                                <AlertTriangle size={48} />
+                            </div>
+                            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">PHÁT HIỆN GIAN LẬN</h1>
+                            <p className="text-gray-500 font-medium mb-12 italic">Hệ thống AI đã đình chỉ bài thi của bạn do phát hiện vi phạm nghiêm trọng.</p>
+                        </>
+                    );
+                case "not_started":
+                    return (
+                        <>
+                            <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-xl">
+                                <Clock size={48} />
+                            </div>
+                            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Bài thi chưa mở</h1>
+                            <p className="text-gray-500 font-medium mb-4">Bài thi sẽ bắt đầu vào lúc:</p>
+                            <p className="text-2xl font-black text-[#5B0019] mb-12">{new Date(lockData.info).toLocaleString('vi-VN')}</p>
+                        </>
+                    );
+                case "expired":
+                    return (
+                        <>
+                            <div className="w-24 h-24 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center mb-6 shadow-xl">
+                                <X size={48} />
+                            </div>
+                            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Bài thi đã kết thúc</h1>
+                            <p className="text-gray-500 font-medium mb-12">Rất tiếc, thời gian tham gia bài thi này đã hết hạn.</p>
+                        </>
+                    );
+                default:
+                    return (
+                        <>
+                            <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-xl">
+                                <CheckCircle size={48} />
+                            </div>
+                            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Bài thi đã nộp</h1>
+                            <p className="text-gray-500 font-medium mb-12">Bạn đã hoàn thành bài thi này trước đó.</p>
+                        </>
+                    );
+            }
+        };
+
         return (
             <div className="fixed inset-0 z-[11000] bg-white flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-500">
-                <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-xl animate-bounce">
-                    <X size={48} />
-                </div>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Bài thi bị khóa</h1>
-                <p className="text-gray-500 font-medium mb-12">{lockReason}</p>
+                {renderLockContent()}
                 <button 
                     onClick={() => router.push('/dashboard/danh-sach-bai-thi')} 
                     className="px-16 py-4 bg-[#5B0019] text-white rounded-2xl font-black shadow-2xl hover:bg-black transition-all active:scale-95 uppercase tracking-widest text-sm"
