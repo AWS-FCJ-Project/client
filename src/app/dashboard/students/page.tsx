@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Users, Search, Edit2, Trash2, Shield, Loader2, X, Save, AlertCircle } from 'lucide-react';
+import { Users, Search, Edit2, Trash2, Shield, Loader2, X, Save, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Cookies from 'js-cookie';
 
 const StudentsPage = () => {
@@ -9,10 +9,11 @@ const StudentsPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
     
     // Edit Modal State
     const [editingStudent, setEditingStudent] = useState<any>(null);
-    const [editForm, setEditForm] = useState({ name: '', class_name: '', grade: '' });
+    const [editForm, setEditForm] = useState({ name: '', class_name: '', grade: '', password: '' });
 
     const fetchStudents = async () => {
         try {
@@ -38,6 +39,10 @@ const StudentsPage = () => {
         fetchStudents();
     }, []);
 
+    const togglePassword = (id: string) => {
+        setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
     const handleDelete = async (id: string) => {
         if (!confirm("Bạn có chắc chắn muốn xóa học sinh này? Hành động này không thể hoàn tác.")) return;
         
@@ -62,7 +67,8 @@ const StudentsPage = () => {
         setEditForm({
             name: student.name || '',
             class_name: student.class_name || '',
-            grade: student.grade || ''
+            grade: student.grade || '',
+            password: ''
         });
     };
 
@@ -79,7 +85,8 @@ const StudentsPage = () => {
                 body: JSON.stringify({
                     name: editForm.name,
                     class_name: editForm.class_name,
-                    grade: parseInt(editForm.grade.toString())
+                    grade: parseInt(editForm.grade.toString()),
+                    password: editForm.password || undefined
                 })
             });
 
@@ -143,6 +150,7 @@ const StudentsPage = () => {
                             <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</th>
                             <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Khối</th>
                             <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Lớp</th>
+                            <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Mật khẩu</th>
                             <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Thao tác</th>
                         </tr>
                     </thead>
@@ -167,6 +175,19 @@ const StudentsPage = () => {
                                     <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg font-black text-xs">
                                         {student.class_name || 'Chưa xếp'}
                                     </span>
+                                </td>
+                                <td className="px-8 py-6 text-center">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <code className="px-2 py-1 bg-gray-100 text-gray-600 rounded font-mono text-xs min-w-[80px]">
+                                            {visiblePasswords[student.id] ? (student.password_plain || 'N/A') : '********'}
+                                        </code>
+                                        <button 
+                                            onClick={() => togglePassword(student.id)}
+                                            className="p-1 text-gray-400 hover:text-[#5B0019] transition-colors"
+                                        >
+                                            {visiblePasswords[student.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                    </div>
                                 </td>
                                 <td className="px-8 py-6 text-right">
                                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -243,6 +264,17 @@ const StudentsPage = () => {
                                         className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] font-black transition-all"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Mật khẩu mới (Để trống nếu không đổi)</label>
+                                <input 
+                                    type="text"
+                                    placeholder="Nhập mật khẩu mới..."
+                                    value={editForm.password}
+                                    onChange={(e) => setEditForm({...editForm, password: e.target.value})}
+                                    className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] font-black transition-all"
+                                />
                             </div>
 
                             <button 

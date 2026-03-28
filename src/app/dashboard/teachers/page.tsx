@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Users, UserPlus, Mail, Shield, Search, Loader2, Download, AlertCircle, Edit2, Trash2, X, Save, AlertTriangle, CheckCircle, BookOpen, Clock, Calendar, Briefcase, Slash, Plus, GraduationCap, School } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, Search, Loader2, Download, AlertCircle, Edit2, Trash2, X, Save, AlertTriangle, CheckCircle, BookOpen, Clock, Calendar, Briefcase, Slash, Plus, GraduationCap, School, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 
@@ -16,6 +16,7 @@ const TeachersPage = () => {
     const [deletingTeacher, setDeletingTeacher] = useState<any>(null);
     const [viewingProfile, setViewingProfile] = useState<any>(null);
     const [isActionLoading, setIsActionLoading] = useState(false);
+    const [showTeacherPassword, setShowTeacherPassword] = useState(false);
     
     // UI Helpers
     const [newSubject, setNewSubject] = useState('');
@@ -59,7 +60,8 @@ const TeachersPage = () => {
                 body: JSON.stringify({
                     name: editingTeacher.name,
                     email: editingTeacher.email,
-                    subjects: editingTeacher.subjects || []
+                    subjects: editingTeacher.subjects || [],
+                    password: editingTeacher.new_password || undefined
                 })
             });
 
@@ -266,6 +268,22 @@ const TeachersPage = () => {
                                             </p>
                                             <p className="text-gray-600 font-bold">{viewingProfile.email}</p>
                                         </div>
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                <Shield size={12} /> Mật khẩu đăng nhập
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <code className="px-3 py-1 bg-gray-100 text-[#5B0019] rounded-lg font-mono font-black text-sm border border-gray-200 min-w-[100px]">
+                                                    {showTeacherPassword ? (viewingProfile.password_plain || 'N/A') : '********'}
+                                                </code>
+                                                <button 
+                                                    onClick={() => setShowTeacherPassword(!showTeacherPassword)}
+                                                    className="p-1.5 text-gray-400 hover:text-[#5B0019] transition-all bg-white rounded-lg border border-gray-100 shadow-sm"
+                                                >
+                                                    {showTeacherPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="flex-1 space-y-4">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
@@ -398,6 +416,17 @@ const TeachersPage = () => {
                                         type="email"
                                         value={editingTeacher.email || ''}
                                         onChange={(e) => setEditingTeacher({...editingTeacher, email: e.target.value})}
+                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] font-bold text-gray-700"
+                                    />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Mật khẩu mới (Để trống nếu không đổi)</label>
+                                    <input 
+                                        type="text"
+                                        placeholder="Nhập mật khẩu mới cho giáo viên..."
+                                        value={editingTeacher.new_password || ''}
+                                        onChange={(e) => setEditingTeacher({...editingTeacher, new_password: e.target.value})}
                                         className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] font-bold text-gray-700"
                                     />
                                 </div>
