@@ -95,7 +95,10 @@ const ViolationsPage = () => {
     const formatDate = (dateStr: string) => {
         if (!dateStr) return "N/A";
         const d = new Date(dateStr);
-        return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        return d.toLocaleString('vi-VN', { 
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        }).replace(',', ' |');
     };
 
     return (
@@ -162,7 +165,7 @@ const ViolationsPage = () => {
                                                     Đã bị khóa bài thi
                                                 </span>
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                    <History size={12} /> {group.examList.length} môn vi phạm
+                                                    <History size={12} /> {group.examList.length} bài thi vi phạm
                                                 </span>
                                             </div>
                                         </div>
@@ -189,20 +192,17 @@ const ViolationsPage = () => {
                                                             <FileText size={20} />
                                                         </div>
                                                         <div>
-                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Môn thi</p>
-                                                            <p className="text-lg font-black text-gray-900">{exam.subject}</p>
-                                                            <p className="text-[9px] font-bold text-[#5B0019] uppercase tracking-tighter">Ngày thi: {formatDate(exam.exam_start)}</p>
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Tiêu đề bài thi / Môn</p>
+                                                            <p className="text-lg font-black text-gray-900">{exam.exam_title || "Unknown Exam"}</p>
+                                                            <p className="text-[10px] font-bold text-[#5B0019] opacity-70">Môn: {exam.subject}</p>
                                                         </div>
                                                     </div>
                                                     
                                                     <div className="flex items-center gap-8 pr-4">
                                                         <div className="text-right">
-                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 flex items-center justify-end gap-1.5"><Clock size={10} /> Thời gian phát hiện cuối</p>
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 flex items-center justify-end gap-1.5"><Calendar size={10} /> Thời gian ca thi</p>
                                                             <p className="text-sm font-black text-gray-700">
-                                                                {new Date(exam.last_violation).toLocaleString('vi-VN', { 
-                                                                    day: '2-digit', month: '2-digit', year: 'numeric',
-                                                                    hour: '2-digit', minute: '2-digit'
-                                                                }).replace(',', ' |')}
+                                                                {formatDate(exam.exam_start)}
                                                             </p>
                                                         </div>
                                                         <div className="px-5 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-600/20">
