@@ -93,7 +93,11 @@ const ExamPage = () => {
                     setExam(data);
                     const end = new Date(data.end_time).getTime();
                     const now = Date.now();
-                    setTimeLeft(Math.max(0, Math.floor((end - now) / 1000)));
+                    const secondsUntilDeadline = Math.floor((end - now) / 1000);
+                    const durationSeconds = (data.duration || 60) * 60;
+                    
+                    // Time left is the smaller of (Time until deadline) or (Exam duration)
+                    setTimeLeft(Math.max(0, Math.min(secondsUntilDeadline, durationSeconds)));
                 }
             } else {
                 const errData = await res.json().catch(() => ({ detail: "Không thể tải dữ liệu bài thi" }));
@@ -608,16 +612,18 @@ const ExamPage = () => {
 
             {/* Persistent Seamless Camera Source */}
             <div className="hidden" aria-hidden="true">
-                <div ref={cameraSourceRef} className="w-full h-full">
-                    <CameraMonitor 
-                        onViolation={handleViolation} 
-                        onStatusChange={setCameraStatus} 
-                        isCheck={!isStarted}
-                        isActive={!isSubmitted && !showCheatModal}
-                        examId={examId}
-                        studentId={user?._id || "unknown"}
-                    />
-                </div>
+                {user && (
+                    <div ref={cameraSourceRef} className="w-full h-full">
+                        <CameraMonitor 
+                            onViolation={handleViolation} 
+                            onStatusChange={setCameraStatus} 
+                            isCheck={!isStarted}
+                            isActive={!isSubmitted && !showCheatModal}
+                            examId={examId}
+                            studentId={user?._id || "unknown"}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,105 +1,227 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { ShieldAlert, User, Calendar, FileText, Loader2, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { ShieldAlert, User, Calendar, FileText, Loader2, AlertCircle, ChevronDown, ChevronUp, Image as ImageIcon, History, Clock } from 'lucide-react';
 import Cookies from 'js-cookie';
 
 const ViolationsPage = () => {
     const [violations, setViolations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+    const fetchViolations = async () => {
+        try {
+            const token = Cookies.get('auth_token');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exams/violations/all`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setViolations(data);
+            }
+        } catch (error) {
+            console.error("Error fetching violations:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchViolations = async () => {
-            try {
-                const token = Cookies.get('auth_token');
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/classes/homeroom/violations`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setViolations(data);
-                }
-            } catch (error) {
-                console.error("Error fetching violations:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchViolations();
+        // Refresh every 30 seconds to keep updated
+        const interval = setInterval(fetchViolations, 30000);
+        return () => clearInterval(interval);
     }, []);
 
+    // Group violations by student
+    const groupedViolations = useMemo(() => {
+        const groups: { [key: string]: any } = {};
+        violations.forEach(v => {
+                if (!groups[v.student_id]) {
+                    groups[v.student_id] = {
+                        student_id: v.student_id,
+                        student_name: v.student_name,
+                        student_class: v.student_class || "N/A",
+                        items: []
+                    };
+                }
+            groups[v.student_id].items.push(v);
+        });
+        return Object.values(groups);
+    }, [violations]);
+
+    const toggleExpand = (id: string) => {
+        const next = new Set(expandedIds);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setExpandedIds(next);
+    };
+
     if (loading) return (
-        <div className="flex h-64 items-center justify-center">
-            <Loader2 className="animate-spin text-red-600" size={40} />
+        <div className="flex h-[60vh] items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <Loader2 className="animate-spin text-[#5B0019]" size={48} />
+                <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Đang tải báo cáo vi phạm...</p>
+            </div>
         </div>
     );
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center gap-4">
-                <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
-                    <ShieldAlert size={32} />
+        <div className="max-w-6xl mx-auto space-y-10 pb-20 animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="space-y-2">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-50 text-[#5B0019] rounded-full text-[10px] font-black uppercase tracking-widest border border-red-100">
+                        <ShieldAlert size={14} /> Hệ thống giám sát AI
+                    </div>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-none">Hồ Sơ Vi Phạm</h1>
+                    <p className="text-gray-500 font-medium">Danh sách các học sinh bị đình chỉ thi do phát hiện gian lận nghiêm trọng.</p>
                 </div>
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Danh Sách Vi Phạm</h1>
-                    <p className="text-gray-500 font-medium">Báo cáo học sinh bị khóa bài thi do vi phạm quy chế (Lớp chủ nhiệm)</p>
+                
+                <div className="flex gap-4">
+                    <div className="bg-white px-6 py-4 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center">
+                            <History size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Tổng học sinh</p>
+                            <p className="text-2xl font-black text-gray-900 leading-none">{groupedViolations.length}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {violations.length === 0 ? (
-                <div className="bg-white p-20 rounded-[3rem] border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
-                    <AlertCircle size={48} className="mb-4 opacity-20" />
-                    <p className="text-xl font-bold">Hiện chưa có vi phạm nào được ghi nhận.</p>
+            {groupedViolations.length === 0 ? (
+                <div className="bg-white p-32 rounded-[4rem] border-4 border-dashed border-gray-50 flex flex-col items-center justify-center text-center animate-in zoom-in duration-1000">
+                    <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-8">
+                        <ShieldAlert size={48} className="opacity-40" />
+                    </div>
+                    <h2 className="text-2xl font-black text-gray-900 mb-2">Hệ Thống An Toàn</h2>
+                    <p className="text-gray-400 font-medium max-w-xs">Hiện tại chưa ghi nhận trường hợp học sinh nào vi phạm quy chế thi.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {violations.map((v) => (
-                        <div key={v.id} className="bg-white p-8 rounded-[3rem] border border-red-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
-                             <div className="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
-                            
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-red-50 group-hover:text-red-600 transition-colors">
-                                        <User size={32} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-black text-gray-800">{v.student_name}</h3>
-                                        <p className="text-red-600 font-black text-xs uppercase tracking-widest">ĐÃ KHÓA BÀI THI</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3 bg-gray-50 p-6 rounded-2xl">
-                                    <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                                        <FileText size={16} className="text-gray-400" />
-                                        Môn: {v.subject}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                                        <Calendar size={16} className="text-gray-400" />
-                                        Thời gian: {new Date(v.violation_time).toLocaleString('vi-VN', { 
-                                            day: '2-digit', 
-                                            month: '2-digit', 
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}
-                                    </div>
-                                </div>
-
-                                {v.evidence_images && v.evidence_images.length > 0 && (
-                                    <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bằng chứng hình ảnh</p>
-                                        <div className="flex gap-2 overflow-x-auto pb-2">
-                                            {v.evidence_images.map((img: string, idx: number) => (
-                                                <div key={idx} className="w-16 h-16 bg-gray-200 rounded-xl shrink-0 border border-gray-100 overflow-hidden">
-                                                    <img src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${img}`} alt="evidence" className="w-full h-full object-cover" />
-                                                </div>
-                                            ))}
+                <div className="space-y-4">
+                    {groupedViolations.map((group) => {
+                        const isExpanded = expandedIds.has(group.student_id);
+                        return (
+                            <div key={group.student_id} className={`bg-white rounded-[2.5rem] border transition-all duration-500 overflow-hidden ${
+                                isExpanded ? 'border-red-100 shadow-xl shadow-red-500/5' : 'border-gray-100 shadow-sm hover:border-red-100'
+                            }`}>
+                                {/* Card Outer */}
+                                <div 
+                                    onClick={() => toggleExpand(group.student_id)}
+                                    className="p-6 md:p-8 flex items-center justify-between cursor-pointer group"
+                                >
+                                    <div className="flex items-center gap-6">
+                                        <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all duration-500 ${
+                                            isExpanded ? 'bg-[#5B0019] text-white rotate-6' : 'bg-gray-50 text-gray-400 group-hover:bg-red-50 group-hover:text-red-500'
+                                        }`}>
+                                            <User size={32} />
                                         </div>
+                                        <div>
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="text-2xl font-black text-gray-900 tracking-tight">{group.student_name}</h3>
+                                                <span className="text-[10px] font-black text-[#5B0019] border border-[#5B0019]/20 bg-[#5B0019]/5 px-2 py-0.5 rounded-lg uppercase">
+                                                    Lớp: {group.student_class}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-4 mt-1">
+                                                <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-3 py-1 bg-red-50 rounded-full border border-red-100">
+                                                    Đã bị khóa bài thi
+                                                </span>
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                    <History size={12} /> {group.items.length} môn vi phạm
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-300 ${
+                                        isExpanded ? 'bg-gray-900 text-white border-gray-900 rotate-180' : 'bg-white text-gray-300 border-gray-100 group-hover:border-red-100 group-hover:text-red-500'
+                                    }`}>
+                                        <ChevronDown size={24} />
+                                    </div>
+                                </div>
+
+                                {/* Card Inner */}
+                                {isExpanded && (
+                                    <div className="px-8 pb-8 space-y-8 animate-in slide-in-from-top-4 duration-500">
+                                        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-gray-100 to-transparent mb-8"></div>
+                                        
+                                        {group.items.map((item: any, idx: number) => (
+                                            <div key={item.id} className="space-y-6">
+                                                {/* Violation Header Frame */}
+                                                <div className="bg-gray-50/80 rounded-[2rem] p-6 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="p-3 bg-white rounded-2xl shadow-sm text-[#5B0019]">
+                                                            <FileText size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Môn thi</p>
+                                                            <p className="text-lg font-black text-gray-900">{item.subject}</p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-8 pr-4">
+                                                        <div className="text-right">
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 flex items-center justify-end gap-1.5"><Clock size={10} /> Thời gian đóng bài</p>
+                                                            <p className="text-sm font-black text-gray-700">
+                                                                {new Date(item.violation_time).toLocaleString('vi-VN', { 
+                                                                    day: '2-digit', month: '2-digit', year: 'numeric',
+                                                                    hour: '2-digit', minute: '2-digit'
+                                                                }).replace(',', ' |')}
+                                                            </p>
+                                                        </div>
+                                                        <div className="px-5 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-600/20">
+                                                            Bị đình chỉ
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Evidence Grid */}
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-2 pl-2">
+                                                        <ImageIcon size={14} className="text-gray-300" />
+                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bằng chứng AI ghi nhận ({item.evidence_images?.length || 0})</span>
+                                                    </div>
+                                                    
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                                        {item.evidence_images && item.evidence_images.length > 0 ? (
+                                                            item.evidence_images.map((img: string, i: number) => (
+                                                                <div 
+                                                                    key={i} 
+                                                                    className="aspect-video bg-gray-100 rounded-[1.5rem] border border-gray-100 overflow-hidden group/img relative shadow-sm hover:shadow-md transition-all cursor-zoom-in"
+                                                                    onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/storage/${img}`, '_blank')}
+                                                                >
+                                                                    <img 
+                                                                        src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${img}`} 
+                                                                        alt="violation proof" 
+                                                                        className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700"
+                                                                    />
+                                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                                                        <ImageIcon className="text-white" size={24} />
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="col-span-full py-10 bg-gray-50 rounded-3xl border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
+                                                                <AlertCircle size={32} className="opacity-20 mb-2" />
+                                                                <p className="text-xs font-bold uppercase tracking-widest">Không có dữ liệu ảnh bằng chứng</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {idx < group.items.length - 1 && (
+                                                    <div className="pt-4 border-b border-gray-50"></div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

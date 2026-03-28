@@ -19,6 +19,7 @@ export const MENU_CONFIG = {
         { label: "Lớp học", icon: <Layers size={22} />, desc: "Quản lý lớp học", path: "/dashboard/classes" },
         { label: "Giáo viên", icon: <Users size={22} />, desc: "Quản lý giáo viên", path: "/dashboard/teachers" },
         { label: "Học sinh", icon: <UserPlus size={22} />, desc: "Quản lý học sinh", path: "/dashboard/students" },
+        { label: "Vi phạm", icon: <XCircle size={22} />, desc: "Hồ sơ vi phạm toàn trường", path: "/dashboard/violations" },
         { label: "Tạo tài khoản", icon: <UserPlus size={22} />, desc: "Quản trị người dùng", path: "/dashboard/management" },
         { label: "AI hỗ trợ", icon: <MessageSquare size={22} />, desc: "Trợ lý ảo thông minh", path: "/dashboard/chat-ai-ho-tro" },
         { label: "Giám sát Camera", icon: <Lightbulb size={22} />, desc: "Test tính năng giám sát", path: "/dashboard/test-camera" },
