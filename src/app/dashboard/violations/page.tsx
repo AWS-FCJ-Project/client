@@ -60,10 +60,20 @@ const ViolationsPage = () => {
             studentGroups[v.student_id].exams[v.exam_id].incidents.push(v);
         });
         
-        return Object.values(studentGroups).map((g: any) => ({
-            ...g,
-            examList: Object.values(g.exams)
-        }));
+        const result = Object.values(studentGroups).map((g: any) => {
+            // Processing each exam to find unique images and filtering by threshold (>= 4)
+            const filteredExams = Object.values(g.exams).map((exam: any) => {
+                const uniqueImages = Array.from(new Set(exam.incidents.flatMap((inc: any) => inc.evidence_images || [])));
+                return { ...exam, uniqueImages };
+            }).filter((exam: any) => exam.uniqueImages.length >= 4);
+
+            return {
+                ...g,
+                examList: filteredExams
+            };
+        }).filter((group: any) => group.examList.length > 0); // Only show students with at least 1 actual violation
+
+        return result;
     }, [violations]);
 
     const toggleExpand = (id: string) => {
@@ -206,13 +216,13 @@ const ViolationsPage = () => {
                                                     <div className="flex items-center gap-2 pl-2">
                                                         <ImageIcon size={14} className="text-gray-300" />
                                                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                            Bằng chứng AI ghi nhận ({Array.from(new Set(exam.incidents.flatMap((inc: any) => inc.evidence_images || []))).length})
+                                                            Bằng chứng AI ghi nhận ({exam.uniqueImages.length})
                                                         </span>
                                                     </div>
                                                     
                                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                                        {Array.from(new Set(exam.incidents.flatMap((inc: any) => inc.evidence_images || []))).length > 0 ? (
-                                                            Array.from(new Set(exam.incidents.flatMap((inc: any) => inc.evidence_images || []))).map((img: any, i: number) => (
+                                                        {exam.uniqueImages.length > 0 ? (
+                                                            exam.uniqueImages.map((img: any, i: number) => (
                                                                 <div 
                                                                     key={i} 
                                                                     className="aspect-video bg-gray-100 rounded-[1.5rem] border border-gray-100 overflow-hidden group/img relative shadow-sm hover:shadow-md transition-all cursor-zoom-in"
