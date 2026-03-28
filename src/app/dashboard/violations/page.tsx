@@ -49,6 +49,7 @@ const ViolationsPage = () => {
             if (!studentGroups[v.student_id].exams[v.exam_id]) {
                 studentGroups[v.student_id].exams[v.exam_id] = {
                     exam_id: v.exam_id,
+                    exam_title: v.exam_title,
                     subject: v.subject,
                     exam_start: v.exam_start,
                     exam_end: v.exam_end,
