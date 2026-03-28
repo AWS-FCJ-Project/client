@@ -607,7 +607,7 @@ const ExamPage = () => {
 
             {/* Persistent Seamless Camera Source */}
             <div className="hidden" aria-hidden="true">
-                {user?._id && (
+                {user?.id && (
                     <div ref={cameraSourceRef} className="w-full h-full">
                         <CameraMonitor 
                             onViolation={handleViolation} 
@@ -615,7 +615,7 @@ const ExamPage = () => {
                             isCheck={!isStarted}
                             isActive={!isSubmitted && !showCheatModal}
                             examId={examId}
-                            studentId={user._id}
+                            studentId={user.id}
                         />
                     </div>
                 )}
