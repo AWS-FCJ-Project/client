@@ -39,6 +39,45 @@ const ExamPage = () => {
     const [sidebarWidth, setSidebarWidth] = useState(320);
     const isResizing = useRef(false);
 
+    const [user, setUser] = useState<any>(null);
+    const [statusLoading, setStatusLoading] = useState(true);
+    const [lockReason, setLockReason] = useState<string | null>(null);
+
+    // --- 1. Fetch User & Exam Status ---
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const token = Cookies.get('auth_token');
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                
+                // Get User Info
+                const userRes = await fetch(`${apiUrl}/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (userRes.ok) {
+                    const uData = await userRes.json();
+                    setUser(uData);
+                }
+
+                // Check Exam Status (Block re-entry)
+                const statusRes = await fetch(`${apiUrl}/exams/${examId}/status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (statusRes.ok) {
+                    const sData = await statusRes.json();
+                    if (sData.is_submitted) {
+                        setLockReason(sData.status === "failed" ? "Bị đình chỉ thi do vi phạm AI" : "Đã nộp bài");
+                    }
+                }
+            } catch (error) {
+                console.error("Init Error:", error);
+            } finally {
+                setStatusLoading(false);
+            }
+        };
+        init();
+    }, [examId]);
+
     // --- 1. Fetch Exam Data ---
     useEffect(() => {
         const fetchExam = async () => {
@@ -49,13 +88,15 @@ const ExamPage = () => {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setExam(data);
-                    
-                    // Calculate duration in seconds
-                    const start = new Date(data.start_time).getTime();
-                    const end = new Date(data.end_time).getTime();
-                    const durationInSeconds = Math.max(0, Math.floor((end - start) / 1000));
-                    setTimeLeft(durationInSeconds);
+                    if (data.is_locked) {
+                        setLockReason(data.submission_status === "failed" ? "Bị đình chỉ thi do vi phạm AI" : "Đã nộp bài");
+                        setExam(data); // Still set to show titles
+                    } else {
+                        setExam(data);
+                        const start = new Date(data.start_time).getTime();
+                        const end = new Date(data.end_time).getTime();
+                        setTimeLeft(Math.max(0, Math.floor((end - start) / 1000)));
+                    }
                 } else {
                     console.error("Failed to fetch exam");
                     router.push('/dashboard/danh-sach-bai-thi');
@@ -114,7 +155,7 @@ const ExamPage = () => {
             const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
             return () => clearInterval(timer);
         } else if (isStarted && timeLeft === 0 && !isSubmitted) {
-            setIsSubmitted(true);
+            submitExam("completed");
         }
     }, [timeLeft, isSubmitted, isStarted]);
 
@@ -128,6 +169,26 @@ const ExamPage = () => {
         }
     }, [showCheatModal, exitCountdown, router]);
 
+    const submitExam = async (finalStatus: string = "completed") => {
+        if (isSubmitted) return;
+        setIsSubmitted(true);
+        try {
+            const token = Cookies.get('auth_token');
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exams/${examId}/submit`, {
+                method: "POST",
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    answers: selectedAnswers,
+                    violation_count: violationCount,
+                    status: finalStatus
+                })
+            });
+        } catch (e) { console.error("Submit Error:", e); }
+    };
+
     const handleStartExam = useCallback(() => {
         setIsStarted(true);
         setIsGracePeriod(true);
@@ -137,13 +198,16 @@ const ExamPage = () => {
     }, []);
 
     const handleViolation = useCallback((vList: string[]) => {
-        if (!isStarted || isGracePeriod) return;
+        if (!isStarted || isGracePeriod || isSubmitted) return;
         setViolationCount(prev => {
             const n = prev + 1;
-            if (n >= 4) setShowCheatModal(true);
+            if (n >= 4) {
+                setShowCheatModal(true);
+                submitExam("failed");
+            }
             return n;
         });
-    }, [isStarted, isGracePeriod]);
+    }, [isStarted, isGracePeriod, isSubmitted]);
 
     const formatTime = (seconds: number): string => {
         const h = Math.floor(seconds / 3600);
@@ -157,11 +221,27 @@ const ExamPage = () => {
         setSelectedAnswers(prev => ({ ...prev, [qIdx]: ansIdx }));
     };
 
-    if (loading) {
+    if (loading || statusLoading) {
         return (
             <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin text-[#5B0019] mb-4" size={48} />
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs animate-pulse">Đang tải đề thi...</p>
+                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs animate-pulse">Đang định danh hệ thống...</p>
+            </div>
+        );
+    }
+
+    if (lockReason) {
+        return (
+            <div className="fixed inset-0 z-[11000] bg-white flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-xl animate-bounce">
+                    <X size={48} />
+                </div>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Bài thi bị khóa</h1>
+                <p className="text-gray-500 font-medium mb-12">{lockReason}</p>
+                <button 
+                    onClick={() => router.push('/dashboard/danh-sach-bai-thi')} 
+                    className="px-16 py-4 bg-[#5B0019] text-white rounded-2xl font-black shadow-2xl hover:bg-black transition-all active:scale-95 uppercase tracking-widest text-sm"
+                >Quay về danh sách</button>
             </div>
         );
     }
@@ -209,11 +289,11 @@ const ExamPage = () => {
                         <Clock size={18} /> {formatTime(timeLeft)}
                     </div>
                     <button
-                        onClick={() => setIsSubmitted(true)}
+                        onClick={() => submitExam("completed")}
                         className="bg-white text-[#5B0019] hover:bg-black hover:text-white px-8 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-40 disabled:grayscale"
-                        disabled={Object.keys(selectedAnswers).length === 0}
+                        disabled={Object.keys(selectedAnswers).length === 0 || isSubmitted}
                     >
-                        <Send size={16} /> Nộp bài
+                        <Send size={16} /> {isSubmitted ? "Đang nộp..." : "Nộp bài"}
                     </button>
                 </div>
             </header>
@@ -459,7 +539,10 @@ const ExamPage = () => {
                     <CameraMonitor 
                         onViolation={handleViolation} 
                         onStatusChange={setCameraStatus} 
-                        isCheck={!isStarted} 
+                        isCheck={!isStarted}
+                        isActive={!isSubmitted && !showCheatModal}
+                        examId={examId}
+                        studentId={user?._id || "unknown"}
                     />
                 </div>
             </div>
