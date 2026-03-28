@@ -28,7 +28,7 @@ const ExamPage = () => {
     const [cameraStatus, setCameraStatus] = useState("Initializing...");
     const [violationCount, setViolationCount] = useState(0);
     const [showCheatModal, setShowCheatModal] = useState(false);
-    const [exitCountdown, setExitCountdown] = useState(3);
+    const [exitCountdown, setExitCountdown] = useState(5);
     const [isGracePeriod, setIsGracePeriod] = useState(false);
     
     const mainContentRef = useRef<HTMLDivElement>(null);
@@ -166,13 +166,13 @@ const ExamPage = () => {
 
     // --- 5. Cheat & Exit Handling ---
     useEffect(() => {
-        if (showCheatModal && exitCountdown > 0) {
+        if ((showCheatModal || isSubmitted) && exitCountdown > 0) {
             const timer = setInterval(() => setExitCountdown(prev => prev - 1), 1000);
             return () => clearInterval(timer);
-        } else if (showCheatModal && exitCountdown === 0) {
+        } else if ((showCheatModal || isSubmitted) && exitCountdown === 0) {
             router.push('/dashboard/danh-sach-bai-thi');
         }
-    }, [showCheatModal, exitCountdown, router]);
+    }, [showCheatModal, isSubmitted, exitCountdown, router]);
 
     const submitExam = async (finalStatus: string = "completed") => {
         if (isSubmitted) return;
@@ -331,21 +331,16 @@ const ExamPage = () => {
         .filter(idx => idx < totalQuestions);
     const totalPages = Math.ceil(totalQuestions / QUESTIONS_PER_PAGE);
 
-    if (isSubmitted) {
-        return (
             <div className="fixed inset-0 z-[11000] bg-white flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-500">
                 <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-xl animate-bounce">
                     <Trophy size={48} />
                 </div>
                 <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Bài thi đã hoàn thành!</h1>
-                <p className="text-gray-500 font-medium mb-12">Hệ thống đang xử lý kết quả của bạn.</p>
-                <button 
-                    onClick={() => router.push('/dashboard/danh-sach-bai-thi')} 
-                    className="px-16 py-4 bg-[#5B0019] text-white rounded-2xl font-black shadow-2xl hover:bg-black transition-all active:scale-95 uppercase tracking-widest text-sm"
-                >Thoát</button>
+                <p className="text-gray-500 font-medium mb-12 italic">Hệ thống đang xử lý kết quả của bạn.</p>
+                <div className="bg-[#5B0019] text-white py-4 px-16 rounded-2xl font-black text-lg shadow-2xl">
+                    THOÁT SAU {exitCountdown}S
+                </div>
             </div>
-        );
-    }
 
     return (
         <div className="fixed inset-0 z-[10000] flex flex-col w-full h-screen bg-gray-50 font-sans overflow-hidden text-sm">
@@ -590,9 +585,9 @@ const ExamPage = () => {
                             </div>
                             
                             <div className="space-y-3">
-                                <h2 className="text-3xl font-black text-gray-900 tracking-tight">VI PHẠM QUÁ MỨC</h2>
+                                <h2 className="text-3xl font-black text-gray-900 tracking-tight">PHÁT HIỆN GIAN LẬN</h2>
                                 <p className="text-gray-500 font-bold leading-relaxed px-4">
-                                    Hệ thống AI đã phát hiện nhiều hành vi bất thường. Bài thi sẽ tự động đóng lại.
+                                    AI đã phát hiện hành vi bất thường và bài thi của bạn đã bị khóa.
                                 </p>
                             </div>
 
@@ -612,7 +607,7 @@ const ExamPage = () => {
 
             {/* Persistent Seamless Camera Source */}
             <div className="hidden" aria-hidden="true">
-                {user && (
+                {user?._id && (
                     <div ref={cameraSourceRef} className="w-full h-full">
                         <CameraMonitor 
                             onViolation={handleViolation} 
@@ -620,7 +615,7 @@ const ExamPage = () => {
                             isCheck={!isStarted}
                             isActive={!isSubmitted && !showCheatModal}
                             examId={examId}
-                            studentId={user?._id || "unknown"}
+                            studentId={user._id}
                         />
                     </div>
                 )}

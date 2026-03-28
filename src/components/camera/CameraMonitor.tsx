@@ -279,6 +279,13 @@ export default function CameraMonitor({
         const video = videoRef.current;
         if (!video || !isActiveRef.current) return;
 
+        const currentIds = idsRef.current;
+        // Safety guard: Don't report if identity is not yet established
+        if (currentIds.examId === "unknown" || currentIds.studentId === "unknown") {
+            console.warn("[CameraMonitor] Identity not ready, skipping report.");
+            return;
+        }
+
         const snap = document.createElement("canvas");
         snap.width = 320; snap.height = 240;
         const ctx = snap.getContext("2d");
@@ -295,8 +302,8 @@ export default function CameraMonitor({
         });
 
         const b64 = snap.toDataURL("image/jpeg", 0.6).split(",")[1];
-
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
         fetch(`${apiUrl}/camera/log`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -307,8 +314,8 @@ export default function CameraMonitor({
                 person_count: count,
                 timestamp: ts,
                 image: b64,
-                exam_id: idsRef.current.examId,
-                student_id: idsRef.current.studentId
+                exam_id: currentIds.examId,
+                student_id: currentIds.studentId
             })
         }).catch(e => console.warn("Could not send log to backend:", e));
     };
@@ -316,6 +323,10 @@ export default function CameraMonitor({
     const sendClearLog = (ts: number) => {
         if (!isActiveRef.current) return;
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const currentIds = idsRef.current;
+        
+        if (currentIds.examId === "unknown" || currentIds.studentId === "unknown") return;
+
         fetch(`${apiUrl}/camera/log`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -323,8 +334,8 @@ export default function CameraMonitor({
                 type: "DETECTION_LOG", 
                 violations: [], 
                 timestamp: ts,
-                exam_id: idsRef.current.examId,
-                student_id: idsRef.current.studentId
+                exam_id: currentIds.examId,
+                student_id: currentIds.studentId
             }),
         }).catch(e => { });
     };
