@@ -33,21 +33,37 @@ const ViolationsPage = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Group violations by student
+    // Group violations by student, then by exam
     const groupedViolations = useMemo(() => {
-        const groups: { [key: string]: any } = {};
+        const studentGroups: { [key: string]: any } = {};
         violations.forEach(v => {
-                if (!groups[v.student_id]) {
-                    groups[v.student_id] = {
-                        student_id: v.student_id,
-                        student_name: v.student_name,
-                        student_class: v.student_class || "N/A",
-                        items: []
-                    };
-                }
-            groups[v.student_id].items.push(v);
+            if (!studentGroups[v.student_id]) {
+                studentGroups[v.student_id] = {
+                    student_id: v.student_id,
+                    student_name: v.student_name,
+                    student_class: v.student_class || "N/A",
+                    exams: {}
+                };
+            }
+            
+            if (!studentGroups[v.student_id].exams[v.exam_id]) {
+                studentGroups[v.student_id].exams[v.exam_id] = {
+                    exam_id: v.exam_id,
+                    subject: v.subject,
+                    exam_start: v.exam_start,
+                    exam_end: v.exam_end,
+                    last_violation: v.violation_time,
+                    incidents: []
+                };
+            }
+            
+            studentGroups[v.student_id].exams[v.exam_id].incidents.push(v);
         });
-        return Object.values(groups);
+        
+        return Object.values(studentGroups).map((g: any) => ({
+            ...g,
+            examList: Object.values(g.exams)
+        }));
     }, [violations]);
 
     const toggleExpand = (id: string) => {
@@ -65,6 +81,12 @@ const ViolationsPage = () => {
             </div>
         </div>
     );
+
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return "N/A";
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
 
     return (
         <div className="max-w-6xl mx-auto space-y-10 pb-20 animate-in fade-in duration-700">
@@ -130,7 +152,7 @@ const ViolationsPage = () => {
                                                     Đã bị khóa bài thi
                                                 </span>
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                    <History size={12} /> {group.items.length} môn vi phạm
+                                                    <History size={12} /> {group.examList.length} môn vi phạm
                                                 </span>
                                             </div>
                                         </div>
@@ -148,8 +170,8 @@ const ViolationsPage = () => {
                                     <div className="px-8 pb-8 space-y-8 animate-in slide-in-from-top-4 duration-500">
                                         <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-gray-100 to-transparent mb-8"></div>
                                         
-                                        {group.items.map((item: any, idx: number) => (
-                                            <div key={item.id} className="space-y-6">
+                                        {group.examList.map((exam: any, idx: number) => (
+                                            <div key={exam.exam_id} className="space-y-6">
                                                 {/* Violation Header Frame */}
                                                 <div className="bg-gray-50/80 rounded-[2rem] p-6 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
                                                     <div className="flex items-center gap-4">
@@ -158,15 +180,16 @@ const ViolationsPage = () => {
                                                         </div>
                                                         <div>
                                                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Môn thi</p>
-                                                            <p className="text-lg font-black text-gray-900">{item.subject}</p>
+                                                            <p className="text-lg font-black text-gray-900">{exam.subject}</p>
+                                                            <p className="text-[9px] font-bold text-[#5B0019] uppercase tracking-tighter">Ngày thi: {formatDate(exam.exam_start)}</p>
                                                         </div>
                                                     </div>
                                                     
                                                     <div className="flex items-center gap-8 pr-4">
                                                         <div className="text-right">
-                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 flex items-center justify-end gap-1.5"><Clock size={10} /> Thời gian đóng bài</p>
+                                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 flex items-center justify-end gap-1.5"><Clock size={10} /> Thời gian phát hiện cuối</p>
                                                             <p className="text-sm font-black text-gray-700">
-                                                                {new Date(item.violation_time).toLocaleString('vi-VN', { 
+                                                                {new Date(exam.last_violation).toLocaleString('vi-VN', { 
                                                                     day: '2-digit', month: '2-digit', year: 'numeric',
                                                                     hour: '2-digit', minute: '2-digit'
                                                                 }).replace(',', ' |')}
@@ -178,16 +201,18 @@ const ViolationsPage = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Evidence Grid */}
+                                                {/* Evidence Grid - Collect all and unique images from incidents */}
                                                 <div className="space-y-3">
                                                     <div className="flex items-center gap-2 pl-2">
                                                         <ImageIcon size={14} className="text-gray-300" />
-                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bằng chứng AI ghi nhận ({item.evidence_images?.length || 0})</span>
+                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                            Bằng chứng AI ghi nhận ({Array.from(new Set(exam.incidents.flatMap((inc: any) => inc.evidence_images || []))).length})
+                                                        </span>
                                                     </div>
                                                     
                                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                                        {item.evidence_images && item.evidence_images.length > 0 ? (
-                                                            item.evidence_images.map((img: string, i: number) => (
+                                                        {Array.from(new Set(exam.incidents.flatMap((inc: any) => inc.evidence_images || []))).length > 0 ? (
+                                                            Array.from(new Set(exam.incidents.flatMap((inc: any) => inc.evidence_images || []))).map((img: any, i: number) => (
                                                                 <div 
                                                                     key={i} 
                                                                     className="aspect-video bg-gray-100 rounded-[1.5rem] border border-gray-100 overflow-hidden group/img relative shadow-sm hover:shadow-md transition-all cursor-zoom-in"
@@ -212,7 +237,7 @@ const ViolationsPage = () => {
                                                     </div>
                                                 </div>
 
-                                                {idx < group.items.length - 1 && (
+                                                {idx < group.examList.length - 1 && (
                                                     <div className="pt-4 border-b border-gray-50"></div>
                                                 )}
                                             </div>
