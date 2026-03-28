@@ -62,9 +62,15 @@ const ExamListPage = () => {
     };
 
     const formatShortTime = (dateStr: string) => {
+        if (!dateStr) return "---";
         const d = new Date(dateStr);
-        return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + " " + 
-               d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        return d.toLocaleString('vi-VN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }).replace(',', ' lúc');
     };
 
     return (

@@ -53,7 +53,7 @@ const ExamPage = () => {
                 if (!apiUrl) throw new Error("API URL not configured");
 
                 // Get User Info
-                const userRes = await fetch(`${apiUrl}/users/me`, {
+                const userRes = await fetch(`${apiUrl}/user-info`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (userRes.ok) {
@@ -274,7 +274,15 @@ const ExamPage = () => {
                             </div>
                             <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Bài thi chưa mở</h1>
                             <p className="text-gray-500 font-medium mb-4">Bài thi sẽ bắt đầu vào lúc:</p>
-                            <p className="text-2xl font-black text-[#5B0019] mb-12">{new Date(lockData.info).toLocaleString('vi-VN')}</p>
+                            <p className="text-2xl font-black text-[#5B0019] mb-12">
+                                {new Date(lockData.info).toLocaleString('vi-VN', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit',
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric'
+                                }).replace(',', ' lúc')}
+                            </p>
                         </>
                     );
                 case "expired":

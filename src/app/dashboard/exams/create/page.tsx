@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { Save, ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
+import TimePicker from '@/components/ui/TimePicker';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
@@ -12,14 +13,16 @@ const CreateExamForm = () => {
     
     const [loading, setLoading] = useState(false);
     const [classes, setClasses] = useState<any[]>([]);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<any>({
         title: '',
         description: '',
         subject: '',
         class_id: '',
+        start_date: '',
         start_time: '',
-        end_time: '',
-        duration: 60,
+        end_date: '',
+        end_time: '00:00',
+        duration: '',
         questions: [{ q: '', options: ['', '', '', ''], correct: 0 }]
     });
 
@@ -36,7 +39,7 @@ const CreateExamForm = () => {
                     
                     // Auto-fill class if provided in URL
                     if (preselectedClassId) {
-                        setFormData(prev => ({ ...prev, class_id: preselectedClassId }));
+                        setFormData((prev: any) => ({ ...prev, class_id: preselectedClassId }));
                     }
                 }
             } catch (error) {
@@ -51,13 +54,40 @@ const CreateExamForm = () => {
         setLoading(true);
         try {
             const token = Cookies.get('auth_token');
+            const dataToSubmit = { ...formData };
+            
+            // Combine Date and Time as LOCAL time
+            let finalStart = "";
+            if (dataToSubmit.start_date) {
+                const timeStr = dataToSubmit.start_time || "00:00";
+                // Create date object as local time
+                const localDate = new Date(`${dataToSubmit.start_date}T${timeStr}`);
+                finalStart = localDate.toISOString();
+            } else {
+                finalStart = new Date().toISOString();
+            }
+
+            let finalEnd = "";
+            if (dataToSubmit.end_date) {
+                const timeStr = dataToSubmit.end_time || "00:00";
+                const localDate = new Date(`${dataToSubmit.end_date}T${timeStr}`);
+                finalEnd = localDate.toISOString();
+            }
+
+            const payload = {
+                ...formData,
+                start_time: finalStart,
+                end_time: finalEnd,
+                duration: parseInt(formData.duration) || 0
+            };
+
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exams`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
             if (res.ok) {
                 window.location.href = '/dashboard/exams';
@@ -90,8 +120,8 @@ const CreateExamForm = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">
                             <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Tiêu đề đề thi</label>
                             <input 
@@ -116,8 +146,8 @@ const CreateExamForm = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <div className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+                         <div className="space-y-2 max-w-sm">
                             <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Lớp học</label>
                             <select 
                                 required
@@ -131,35 +161,71 @@ const CreateExamForm = () => {
                                 ))}
                             </select>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Bắt đầu</label>
-                            <input 
-                                required
-                                type="datetime-local" 
-                                value={formData.start_time}
-                                onChange={(e) => setFormData({...formData, start_time: e.target.value})}
-                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
-                            />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
+                            {/* Start Time Section */}
+                            <div className="space-y-4 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest pl-2">Ngày Bắt đầu</label>
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            const now = new Date();
+                                            setFormData({
+                                                ...formData, 
+                                                start_date: now.toISOString().split('T')[0],
+                                                start_time: now.toLocaleTimeString('vi-VN', {hour12: false, hour: '2-digit', minute: '2-digit'})
+                                            });
+                                        }}
+                                        className="text-[10px] font-black text-[#5B0019] uppercase tracking-tighter hover:underline"
+                                    >Thời gian hiện tại</button>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <input 
+                                        type="date" 
+                                        value={formData.start_date}
+                                        onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                                        className="flex-1 px-6 py-4 bg-white border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold text-sm"
+                                    />
+                                    <TimePicker 
+                                        value={formData.start_time}
+                                        onChange={(val) => setFormData({...formData, start_time: val})}
+                                        className="w-32"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* End Time Section */}
+                            <div className="space-y-4 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest pl-2">Ngày Kết thúc</label>
+                                <div className="flex items-center gap-4">
+                                    <input 
+                                        type="date" 
+                                        value={formData.end_date}
+                                        onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                                        className="flex-1 px-6 py-4 bg-white border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold text-sm"
+                                    />
+                                    <TimePicker 
+                                        value={formData.end_time}
+                                        onChange={(val) => setFormData({...formData, end_time: val})}
+                                        className="w-32"
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Kết thúc</label>
-                            <input 
-                                required
-                                type="datetime-local" 
-                                value={formData.end_time}
-                                onChange={(e) => setFormData({...formData, end_time: e.target.value})}
-                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
-                            />
-                        </div>
-                        <div className="space-y-2">
+
+                        <div className="space-y-2 pt-6">
                             <label className="text-sm font-black text-gray-400 uppercase tracking-widest pl-2">Thời gian làm bài (Phút)</label>
                             <input 
-                                required
-                                type="number" 
+                                type="text" 
+                                inputMode="numeric"
                                 value={formData.duration}
-                                onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value) || 0})}
-                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
-                                placeholder="VD: 60"
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+/, '');
+                                    setFormData({...formData, duration: val});
+                                }}
+                                className="max-w-xs px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold text-xl"
+                                placeholder="Nhập thời gian làm bài"
                             />
                         </div>
                     </div>
@@ -167,7 +233,7 @@ const CreateExamForm = () => {
 
                 <div className="space-y-6">
                     <h2 className="text-2xl font-black text-gray-900 tracking-tight pl-2">Danh sách câu hỏi</h2>
-                    {formData.questions.map((q, qIdx) => (
+                    {formData.questions.map((q: any, qIdx: number) => (
                         <div key={qIdx} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-4 hover:shadow-md transition-shadow">
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-black text-[#5B0019] uppercase tracking-tighter">Câu {qIdx + 1}</span>
@@ -195,7 +261,7 @@ const CreateExamForm = () => {
                                 }}
                             />
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {q.options.map((opt, oIdx) => (
+                                {q.options.map((opt: string, oIdx: number) => (
                                     <div key={oIdx} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
                                         q.correct === oIdx ? 'bg-[#5B0019]/5 border-[#5B0019]/30 ring-1 ring-[#5B0019]/20' : 'bg-gray-50/50 border-transparent'
                                     }`}>

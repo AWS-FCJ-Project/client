@@ -75,7 +75,13 @@ const ViolationsPage = () => {
                                     </div>
                                     <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
                                         <Calendar size={16} className="text-gray-400" />
-                                        Thời gian: {new Date(v.violation_time).toLocaleString('vi-VN')}
+                                        Thời gian: {new Date(v.violation_time).toLocaleString('vi-VN', { 
+                                            day: '2-digit', 
+                                            month: '2-digit', 
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
                                     </div>
                                 </div>
 

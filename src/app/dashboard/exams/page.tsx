@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Eye, Edit, Trash2, Plus, Clock, FileText, CheckCircle2, Loader2, X, Save, AlertTriangle, PlusCircle, Calendar, GraduationCap, LayoutGrid, ListFilter, ArrowRight, BookOpen, User } from 'lucide-react';
+import TimePicker from '@/components/ui/TimePicker';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 
@@ -13,7 +14,13 @@ interface ExamItem {
     class_id: string;
     start_time: string;
     end_time: string;
+    duration?: number | string;
     questions: any[];
+    // Temp fields for editing
+    start_date?: string;
+    start_time_only?: string;
+    end_date?: string;
+    end_time_only?: string;
 }
 
 const TeacherExams: React.FC = () => {
@@ -92,13 +99,46 @@ const TeacherExams: React.FC = () => {
         setIsActionLoading(true);
         try {
             const token = Cookies.get('auth_token');
+            const dataToUpdate = { ...editingExam };
+            
+            // Combine Date and Time for Start - LOCAL time
+            let finalStart = "";
+            const sDate = dataToUpdate.start_date || (dataToUpdate.start_time ? dataToUpdate.start_time.split('T')[0] : '');
+            const sTime = dataToUpdate.start_time_only || (dataToUpdate.start_time ? new Date(dataToUpdate.start_time).toLocaleTimeString('vi-VN', {hour12: false, hour: '2-digit', minute: '2-digit'}) : '');
+            
+            if (sDate) {
+                const localDate = new Date(`${sDate}T${sTime || "00:00"}`);
+                finalStart = localDate.toISOString();
+            } else {
+                finalStart = dataToUpdate.start_time || new Date().toISOString();
+            }
+
+            // Combine Date and Time for End - LOCAL time
+            let finalEnd = "";
+            const eDate = dataToUpdate.end_date || (dataToUpdate.end_time ? dataToUpdate.end_time.split('T')[0] : '');
+            const eTime = dataToUpdate.end_time_only || (dataToUpdate.end_time ? new Date(dataToUpdate.end_time).toLocaleTimeString('vi-VN', {hour12: false, hour: '2-digit', minute: '2-digit'}) : '00:00');
+            
+            if (eDate) {
+                const localDate = new Date(`${eDate}T${eTime}`);
+                finalEnd = localDate.toISOString();
+            } else {
+                finalEnd = dataToUpdate.end_time;
+            }
+
+            const payload = {
+                ...editingExam,
+                start_time: finalStart,
+                end_time: finalEnd,
+                duration: parseInt(editingExam.duration as string) || 0
+            };
+
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exams/${editingExam.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(editingExam)
+                body: JSON.stringify(payload)
             });
             if (res.ok) {
                 setEditingExam(null);
@@ -233,14 +273,14 @@ const TeacherExams: React.FC = () => {
                                                         </p>
                                                     </div>
 
-                                                    <div className="pt-6 space-y-3">
+                                                    <div className="pt-6 space-y-2">
                                                         <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
                                                             <Calendar size={14} className="text-[#5B0019]" />
-                                                            <span>Thực hiện: {new Date(exam.start_time).toLocaleDateString('vi-VN')}</span>
+                                                            <span>Bắt đầu: {new Date(exam.start_time).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }).replace(',', ' lúc')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
-                                                            <Clock size={14} className="text-[#5B0019]" />
-                                                            <span>{new Date(exam.start_time).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})} - {new Date(exam.end_time).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
+                                                            <Clock size={14} className="text-gray-400" />
+                                                            <span>Kết thúc: {new Date(exam.end_time).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }).replace(',', ' lúc')}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -308,8 +348,8 @@ const TeacherExams: React.FC = () => {
                         </div>
                         
                         <form onSubmit={handleUpdateExam} className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-                            <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Tiêu đề đề thi</label>
                                         <input 
@@ -332,8 +372,8 @@ const TeacherExams: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="space-y-2">
+                                <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+                                    <div className="space-y-2 max-w-sm">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Lớp học</label>
                                         <select 
                                             required
@@ -347,24 +387,71 @@ const TeacherExams: React.FC = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Bắt đầu</label>
-                                        <input 
-                                            required
-                                            type="datetime-local" 
-                                            value={editingExam.start_time.substring(0, 16)}
-                                            onChange={(e) => setEditingExam({...editingExam, start_time: e.target.value})}
-                                            className="w-full px-6 py-4 bg-white border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
-                                        />
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
+                                        {/* Start Date/Time */}
+                                        <div className="space-y-4 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Ngày Bắt đầu</label>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const now = new Date();
+                                                        setEditingExam({
+                                                            ...editingExam, 
+                                                            start_date: now.toISOString().split('T')[0],
+                                                            start_time_only: now.toLocaleTimeString('vi-VN', {hour12: false, hour: '2-digit', minute: '2-digit'})
+                                                        });
+                                                    }}
+                                                    className="text-[8px] font-black text-[#5B0019] uppercase tracking-tighter hover:underline"
+                                                >Thời gian hiện tại</button>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <input 
+                                                    type="date" 
+                                                    value={editingExam.start_date || (editingExam.start_time ? new Date(editingExam.start_time).toLocaleDateString('en-CA') : '')}
+                                                    onChange={(e) => setEditingExam({...editingExam, start_date: e.target.value})}
+                                                    className="flex-1 px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold text-sm"
+                                                />
+                                                <TimePicker 
+                                                    value={editingExam.start_time_only || (editingExam.start_time ? new Date(editingExam.start_time).toLocaleTimeString('vi-VN', {hour12: false, hour: '2-digit', minute: '2-digit'}) : '')}
+                                                    onChange={(val) => setEditingExam({...editingExam, start_time_only: val})}
+                                                    className="w-32"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* End Date/Time */}
+                                        <div className="space-y-4 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Ngày Kết thúc</label>
+                                            <div className="flex items-center gap-4">
+                                                <input 
+                                                    type="date" 
+                                                    value={editingExam.end_date || (editingExam.end_time ? new Date(editingExam.end_time).toLocaleDateString('en-CA') : '')}
+                                                    onChange={(e) => setEditingExam({...editingExam, end_date: e.target.value})}
+                                                    className="flex-1 px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold text-sm"
+                                                />
+                                                <TimePicker 
+                                                    value={editingExam.end_time_only || (editingExam.end_time ? new Date(editingExam.end_time).toLocaleTimeString('vi-VN', {hour12: false, hour: '2-digit', minute: '2-digit'}) : '00:00')}
+                                                    onChange={(val) => setEditingExam({...editingExam, end_time_only: val})}
+                                                    className="w-32"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Kết thúc</label>
+
+                                    <div className="space-y-2 pt-4">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Thời gian làm bài (Phút)</label>
                                         <input 
-                                            required
-                                            type="datetime-local" 
-                                            value={editingExam.end_time.substring(0, 16)}
-                                            onChange={(e) => setEditingExam({...editingExam, end_time: e.target.value})}
-                                            className="w-full px-6 py-4 bg-white border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold"
+                                            type="text" 
+                                            inputMode="numeric"
+                                            value={editingExam.duration === 0 ? '' : editingExam.duration}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^0-9]/g, '').replace(/^0+/, '');
+                                                setEditingExam({...editingExam, duration: val === '' ? 0 : val});
+                                            }}
+                                            className="max-w-xs px-6 py-4 bg-white border-none rounded-2xl focus:ring-2 focus:ring-[#5B0019] transition-all font-bold text-xl"
+                                            placeholder="Nhập thời gian làm bài"
                                         />
                                     </div>
                                 </div>
@@ -383,7 +470,7 @@ const TeacherExams: React.FC = () => {
                                 </div>
                                 
                                 <div className="space-y-4">
-                                    {editingExam.questions?.map((q, qIdx) => (
+                                    {editingExam.questions?.map((q: any, qIdx: number) => (
                                         <div key={qIdx} className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-4 relative group/q">
                                             <div className="flex justify-between items-center">
                                                 <span className="text-sm font-black text-[#5B0019] uppercase tracking-widest">Câu hỏi {qIdx + 1}</span>
@@ -408,17 +495,22 @@ const TeacherExams: React.FC = () => {
                                             />
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {q.options.map((opt: string, oIdx: number) => (
-                                                    <div key={oIdx} className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-transparent focus-within:border-indigo-100 transition-all">
-                                                        <input 
-                                                            type="radio" 
-                                                            checked={q.correct === oIdx}
-                                                            onChange={() => {
-                                                                const newQ = [...editingExam.questions];
-                                                                newQ[qIdx].correct = oIdx;
-                                                                setEditingExam({...editingExam, questions: newQ});
-                                                            }}
-                                                            className="w-5 h-5 text-[#5B0019] focus:ring-[#5B0019]"
-                                                        />
+                                                    <div key={oIdx} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
+                                                        q.correct === oIdx ? 'bg-[#5B0019]/5 border-[#5B0019]/30 ring-1 ring-[#5B0019]/20' : 'bg-gray-50/50 border-transparent'
+                                                    }`}>
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <input 
+                                                                type="radio" 
+                                                                checked={q.correct === oIdx}
+                                                                onChange={() => {
+                                                                    const newQ = [...editingExam.questions];
+                                                                    newQ[qIdx].correct = oIdx;
+                                                                    setEditingExam({...editingExam, questions: newQ});
+                                                                }}
+                                                                className="w-5 h-5 text-[#5B0019] focus:ring-[#5B0019]"
+                                                            />
+                                                            {q.correct === oIdx && <span className="text-[7px] font-black text-[#5B0019] uppercase">Đúng</span>}
+                                                        </div>
                                                         <input 
                                                             required
                                                             placeholder={`Đáp án ${oIdx + 1}`}
@@ -428,7 +520,7 @@ const TeacherExams: React.FC = () => {
                                                                 newQ[qIdx].options[oIdx] = e.target.value;
                                                                 setEditingExam({...editingExam, questions: newQ});
                                                             }}
-                                                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium"
+                                                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold"
                                                         />
                                                     </div>
                                                 ))}
