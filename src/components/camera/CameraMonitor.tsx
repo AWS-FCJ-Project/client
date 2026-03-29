@@ -16,11 +16,17 @@ const FORBIDDEN_IDS = new Set([67, 73]);
 export default function CameraMonitor({ 
     onViolation, 
     onStatusChange,
-    isCheck = false
+    isCheck = false,
+    isActive = true,
+    examId = "unknown",
+    studentId = "unknown"
 }: { 
     onViolation?: (violations: string[]) => void,
     onStatusChange?: (status: string) => void,
-    isCheck?: boolean
+    isCheck?: boolean,
+    isActive?: boolean,
+    examId?: string,
+    studentId?: string
 }) {
     const [status, setStatus] = useState("Initializing...");
     const [isWarning, setIsWarning] = useState(false);
@@ -30,10 +36,20 @@ export default function CameraMonitor({
     const onViolationRef = useRef(onViolation);
     const onStatusChangeRef = useRef(onStatusChange);
     const isCheckRef = useRef(isCheck);
+    const isActiveRef = useRef(isActive);
+    const idsRef = useRef({ examId, studentId });
 
     useEffect(() => { onViolationRef.current = onViolation; }, [onViolation]);
     useEffect(() => { onStatusChangeRef.current = onStatusChange; }, [onStatusChange]);
     useEffect(() => { isCheckRef.current = isCheck; }, [isCheck]);
+    useEffect(() => { 
+        isActiveRef.current = isActive; 
+        if (!isActive) {
+            cancelAnimationFrame(animationFrameIdRef.current);
+            setStatus("Stopped");
+        }
+    }, [isActive]);
+    useEffect(() => { idsRef.current = { examId, studentId }; }, [examId, studentId]);
 
     useEffect(() => {
         if (onStatusChangeRef.current) onStatusChangeRef.current(status);
@@ -45,6 +61,7 @@ export default function CameraMonitor({
     const animationFrameIdRef = useRef<number>(0);
     const lastReportTimeRef = useRef<number>(0);
     const prevViolationStrRef = useRef<string>("");
+    const violationCountRef = useRef<number>(0);
 
     // --- 1. Load Model ---
     useEffect(() => {
@@ -73,7 +90,7 @@ export default function CameraMonitor({
     // --- 2. Camera Setup ---
     useEffect(() => {
         let stream: MediaStream | null = null;
-        if (status === "Ready") {
+        if (status === "Ready" && isActive) {
             navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(s => {
                 stream = s;
                 if (videoRef.current) videoRef.current.srcObject = s;
@@ -90,7 +107,7 @@ export default function CameraMonitor({
                 stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, [status]);
+    }, [status, isActive]);
 
     // --- 3. Processing Logic ---
     const preprocess = (video: HTMLVideoElement) => {
@@ -198,8 +215,8 @@ export default function CameraMonitor({
     };
 
     const runModel = async () => {
-        if (!videoRef.current || !sessionRef.current || videoRef.current.videoWidth === 0) {
-            animationFrameIdRef.current = requestAnimationFrame(runModel);
+        if (!videoRef.current || !sessionRef.current || videoRef.current.videoWidth === 0 || !isActiveRef.current) {
+            if (isActiveRef.current) animationFrameIdRef.current = requestAnimationFrame(runModel);
             return;
         }
 
@@ -218,7 +235,7 @@ export default function CameraMonitor({
         } catch (e) {
             console.error("Inference Error:", e);
         }
-        animationFrameIdRef.current = requestAnimationFrame(runModel);
+        if (isActiveRef.current) animationFrameIdRef.current = requestAnimationFrame(runModel);
     };
 
     const handleViolations = (detections: any[]) => {
@@ -261,7 +278,14 @@ export default function CameraMonitor({
 
     const reportViolation = (vList: string[], codes: string[], count: number, ts: number, detections: any[]) => {
         const video = videoRef.current;
-        if (!video) return;
+        if (!video || !isActiveRef.current) return;
+
+        const currentIds = idsRef.current;
+        // Safety guard: Don't report if identity is not yet established
+        if (currentIds.examId === "unknown" || currentIds.studentId === "unknown") {
+            console.warn("[CameraMonitor] Identity not ready, skipping report.");
+            return;
+        }
 
         const snap = document.createElement("canvas");
         snap.width = 320; snap.height = 240;
@@ -278,9 +302,12 @@ export default function CameraMonitor({
             ctx.strokeRect(rx, ry, rw, rh);
         });
 
-        const b64 = snap.toDataURL("image/jpeg", 0.6).split(",")[1];
-
+        let b64: string | null = null;
+        if (violationCountRef.current < 4) {
+            b64 = snap.toDataURL("image/jpeg", 0.6).split(",")[1];
+        }
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
         fetch(`${apiUrl}/camera/log`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -290,17 +317,32 @@ export default function CameraMonitor({
                 violation_codes: codes,
                 person_count: count,
                 timestamp: ts,
-                image: b64
+                image: b64,
+                exam_id: currentIds.examId,
+                student_id: currentIds.studentId
             })
+        }).then(res => {
+            if (res.ok && b64) violationCountRef.current += 1;
         }).catch(e => console.warn("Could not send log to backend:", e));
     };
 
     const sendClearLog = (ts: number) => {
+        if (!isActiveRef.current) return;
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const currentIds = idsRef.current;
+        
+        if (currentIds.examId === "unknown" || currentIds.studentId === "unknown") return;
+
         fetch(`${apiUrl}/camera/log`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "DETECTION_LOG", violations: [], timestamp: ts }),
+            body: JSON.stringify({ 
+                type: "DETECTION_LOG", 
+                violations: [], 
+                timestamp: ts,
+                exam_id: currentIds.examId,
+                student_id: currentIds.studentId
+            }),
         }).catch(e => { });
     };
 

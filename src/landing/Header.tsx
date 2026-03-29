@@ -1,4 +1,4 @@
-"use client"; // Cần dòng này để dùng được trạng thái đóng/mở menu
+"use client"; // Required for menu toggle state
 import { useState } from "react";
 import Image from "next/image";
 import { Moon, Megaphone, CalendarCheck, Search, Menu, X } from 'lucide-react';
@@ -8,7 +8,7 @@ export default function Header() {
 
     return (
         <header className="w-full border-b flex items-stretch sticky top-0 bg-white z-50">
-            {/* Logo - Thu nhỏ lại trên mobile */}
+            {/* Logo - Scaled down on mobile */}
             <div className="flex items-center justify-center p-2 md:p-0">
                 <Image
                     src="/logo.png"
