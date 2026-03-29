@@ -49,7 +49,7 @@ const AssignmentsPage = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header Section - Đã tối ưu nhỏ gọn hơn để khớp với Header tổng */}
+            {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-gray-800 tracking-tight">Cổng Học Tập</h1>
@@ -62,7 +62,7 @@ const AssignmentsPage = () => {
                 </div>
             </div>
 
-            {/* Grid Layout - Tự động nhảy dòng khi hẹp */}
+            {/* Grid Layout */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
                 {filteredAssignments.map((assignment) => (
                     <AssignmentCard
@@ -73,7 +73,7 @@ const AssignmentsPage = () => {
                 ))}
             </div>
 
-            {/* Modal - Giữ nguyên logic nhưng thêm hiệu ứng mượt hơn */}
+            {/* Submission Modal */}
             {isModalOpen && (
                 <ActionModal
                     assignment={selectedAssignment}
@@ -84,7 +84,7 @@ const AssignmentsPage = () => {
     );
 };
 
-// --- Các sub-components để file sạch hơn ---
+// --- Sub-components for cleaner codebase ---
 
 const AssignmentCard = ({ data, onAction }: { data: any, onAction: () => void }) => {
     const isQuiz = data.type === 'Trắc nghiệm';
@@ -148,7 +148,7 @@ const ActionModal = ({ assignment, onClose }: { assignment: Assignment | null, o
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={18} /></button>
                 </div>
                 <div className="p-8 max-h-[70vh] overflow-y-auto">
-                    {/* Nội dung Modal giữ nguyên như code cũ của bạn */}
+                    {/* Modal Content */}
                     <h3 className="text-xl font-bold mb-4">{assignment.title}</h3>
                     <p className="text-sm text-gray-500 mb-6">{assignment.description}</p>
                     <textarea

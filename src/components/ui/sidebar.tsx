@@ -4,19 +4,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-// 1. Chú ý: Import đúng MENU_CONFIG từ file constants của bạn
+// 1. Note: Ensure MENU_CONFIG is properly imported from constants
 import { MENU_CONFIG } from '@/lib/menu-constants';
 import logo from '../../../public/logo.png';
 
 export const Sidebar = ({ role }: { role: 'student' | 'admin' }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
-    // 2. Sửa từ DASHBOARD_CONFIG thành MENU_CONFIG
+    // 2. Map DASHBOARD_CONFIG to MENU_CONFIG
     const menuItems = MENU_CONFIG[role] || [];
 
     return (
         <aside className={`transition-all duration-300 bg-[#5B0019] text-white py-6 relative flex flex-col h-screen shrink-0 ${isCollapsed ? 'w-20' : 'w-64'}`}>
-            {/* Nút đóng mở */}
+            {/* Toggle Button */}
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="absolute -right-3 top-10 bg-[#5B0019] border border-white/20 rounded-full p-1 z-50 shadow-md hover:scale-110 transition-transform"
@@ -32,7 +32,7 @@ export const Sidebar = ({ role }: { role: 'student' | 'admin' }) => {
                 {!isCollapsed && <span className="font-bold text-lg whitespace-nowrap">EduTrust</span>}
             </div>
 
-            {/* Menu chính */}
+            {/* Main Menu */}
             <nav className="flex flex-col gap-2 px-3 flex-1 overflow-y-auto custom-scrollbar">
                 {menuItems.map((item, index) => (
                     <SidebarItem

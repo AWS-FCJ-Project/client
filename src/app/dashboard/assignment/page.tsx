@@ -10,7 +10,7 @@ import {
 const TeacherAssignments = () => {
     const [filterStatus, setFilterStatus] = useState('all');
 
-    // Dữ liệu mẫu danh sách bài tập của giáo viên
+    // Sample teacher assignments mock data
     const teacherAssignments = [
         {
             id: 1,
